@@ -2,13 +2,21 @@
 // import Facebook from 'next-auth/providers/facebook';
 import Credentials from 'next-auth/providers/credentials';
 import NextAuth from 'next-auth';
-import type { AuthOptions, User } from 'next-auth';
+import type { NextAuthConfig, User } from 'next-auth';
 import { compare } from 'bcrypt';
-import UserModel from './models/user';
+import { object, string } from 'zod';
+import UserModel from './models/User.model';
 
-const option: AuthOptions = {
+const userObject = object({
+  email: string().email({ message: 'Invalid email address' }),
+  password: string().min(6, {
+    message: 'Password must be a minimum of 6 characters',
+  }),
+});
+
+const option: NextAuthConfig = {
   pages: {
-    signIn: '/auth',
+    signIn: '/login',
   },
   providers: [
     // Google,
@@ -16,7 +24,7 @@ const option: AuthOptions = {
     Credentials({
       credentials: {},
       authorize: async (credentials) => {
-        const { email, password } = credentials as unknown as User;
+        const { email, password } = userObject.parse(credentials);
         const user = await UserModel.findOne({ email });
         if (!user) {
           return null;
@@ -27,10 +35,8 @@ const option: AuthOptions = {
         return {
           _id: user._id,
           email: user.email,
-          name: user.firstName,
-          avatar: user.avatar || '/icons/profile.png',
-          lastName: user.lastName,
-          firstName: user.firstName,
+          avatar: user.avatar,
+          name: user.name,
         } as unknown as User;
       },
     }),
@@ -38,14 +44,13 @@ const option: AuthOptions = {
   callbacks: {
     async jwt({ token, user, account }) {
       if (account?.provider === 'google' || account?.provider === 'facebook') {
-        const { email, image, firstName, lastName } = user;
+        const { email, image, name } = user;
         if (email) {
           const existingUser = await UserModel.findOne({ email });
           if (!existingUser) {
             const newUser = new UserModel({
               email,
-              firstName,
-              lastName,
+              name,
               provider: account?.provider,
               avatar: image,
             });
@@ -55,25 +60,22 @@ const option: AuthOptions = {
             if (newUser) {
               token.id = newUser._id.toString();
               token.email = email;
-              token.avatar = image || '/icons/profile.png';
-              token.firstName = firstName;
-              token.lastName = lastName;
+              token.avatar = image;
+              token.name = name || '';
             }
           } else {
             token.id = existingUser._id.toString();
             token.email = email;
-            token.pic = image || '/icons/profile.png';
-            token.firstName = existingUser?.firstName;
-            token.lastName = existingUser?.lastName;
+            token.pic = image;
+            token.name = existingUser?.name;
           }
         } else return token;
       } else {
         // Fallback for other providers or if account is not defined
         token._id = user._id.toString();
         token.email = user.email || '';
-        token.avatar = user.avatar || '/icons/profile.png';
-        token.firstName = user.firstName;
-        token.lastName = user.lastName;
+        token.avatar = user.avatar;
+        token.name = user.name || '';
       }
 
       return token;
@@ -83,8 +85,7 @@ const option: AuthOptions = {
         session.user._id = token._id;
         session.user.email = token.email || '';
         session.user.avatar = token.avatar;
-        session.user.firstName = token.firstName;
-        session.user.lastName = token.lastName;
+        session.user.name = token.name;
       }
 
       return session;
