@@ -37,6 +37,7 @@ const option: NextAuthConfig = {
           email: user.email,
           avatar: user.avatar,
           name: user.name,
+          isAdmin: user.isAdmin
         } as unknown as User;
       },
     }),
@@ -61,12 +62,14 @@ const option: NextAuthConfig = {
               token.id = newUser._id.toString();
               token.email = email;
               token.avatar = image;
+              token.isAdmin = false;
               token.name = name || '';
             }
           } else {
             token.id = existingUser._id.toString();
             token.email = email;
             token.pic = image;
+            token.isAdmin = existingUser?.isAdmin;
             token.name = existingUser?.name;
           }
         } else return token;
@@ -75,6 +78,7 @@ const option: NextAuthConfig = {
         token._id = user._id.toString();
         token.email = user.email || '';
         token.avatar = user.avatar;
+        token.isAdmin = user.isAdmin;
         token.name = user.name || '';
       }
 
@@ -86,6 +90,7 @@ const option: NextAuthConfig = {
         session.user.email = token.email || '';
         session.user.avatar = token.avatar;
         session.user.name = token.name;
+        session.user.isAdmin = token.isAdmin;
       }
 
       return session;
