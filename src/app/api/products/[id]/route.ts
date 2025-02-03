@@ -64,3 +64,27 @@ export async function PATCH(
     );
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: tParams },
+) {
+  try {
+    const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { message: 'Product ID is required' },
+        { status: 400 },
+      );
+    }
+
+    await Product.findByIdAndDelete(id);
+    return NextResponse.json({ message: 'Deleted sucessfully' });
+  } catch (error) {
+    console.error('DELETE /products/[id] error:', error);
+    return NextResponse.json(
+      { message: 'Internal Server Error' },
+      { status: 500 },
+    );
+  }
+}
