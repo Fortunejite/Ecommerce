@@ -1,20 +1,36 @@
-import dbConnect from '@/lib/mongodb';
+import { auth } from '@/auth';
 import User from '@/models/User.model';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    await dbConnect();
-  
-    const page = Number(request.nextUrl.searchParams.get('page')) || 1;
-    const limit = Number(request.nextUrl.searchParams.get('limit')) || 10;
-    const skip = (page - 1) * limit;
-  
-    const users = await User.find().skip(skip).limit(limit);
-    return NextResponse.json({ data: users }, { status: 200 });
-    
-  } catch(e) {
-    console.log(e)
-    return NextResponse.json({ data: null }, { status: 500 });
+    const session = await auth();
+    if (!session)
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+
+    const { user } = session;
+
+    const profile = await User.findById(user._id);
+    return NextResponse.json(profile);
+  } catch (e) {
+    console.log(e);
+    return NextResponse.json({}, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session)
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+
+    const { user } = session;
+    const body = await request.json();
+
+    const profile = await User.findByIdAndUpdate(user._id, body);
+    return NextResponse.json(profile);
+  } catch (e) {
+    console.log(e);
+    return NextResponse.json({}, { status: 500 });
   }
 }
