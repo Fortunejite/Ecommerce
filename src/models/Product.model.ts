@@ -1,12 +1,12 @@
-import { Schema, model, models } from 'mongoose';
+import { InferSchemaType, Schema, model, models } from 'mongoose';
 
 const productSchema = new Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: [true, "Name is required"],
     },
-    description: { type: String, required: true },
+    description: { type: String, required: [true, "Description is required"] },
     tags: [
       {
         type: Schema.Types.ObjectId,
@@ -29,7 +29,7 @@ const productSchema = new Schema(
     },
     price: {
       type: Number,
-      required: true,
+      required: [true, "Price is required"],
     },
     colors: [
       {
@@ -42,7 +42,7 @@ const productSchema = new Schema(
     },
     mainPic: {
       type: String,
-      required: true,
+      required: [true, "mainPic is required"],
     },
     otherImages: [
       {
@@ -76,6 +76,8 @@ const productSchema = new Schema(
   },
   { timestamps: true },
 );
+
+export type IProduct = InferSchemaType<typeof productSchema>
 
 const Product = models.Product || model('Product', productSchema);
 export default Product;

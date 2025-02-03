@@ -1,4 +1,4 @@
-import User from '@/models/user';
+import User from '@/models/User.model';
 import { hash } from 'bcrypt';
 import { ZodError, object, string } from 'zod';
 import { NextResponse } from 'next/server';

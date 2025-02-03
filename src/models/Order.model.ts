@@ -1,4 +1,4 @@
-import { Schema, model, models } from 'mongoose';
+import { InferSchemaType, Schema, model, models } from 'mongoose';
 
 const orderSchema = new Schema(
   {
@@ -41,6 +41,8 @@ const orderSchema = new Schema(
   },
   { timestamps: true },
 );
+
+export type IOrder = InferSchemaType<typeof orderSchema>
 
 const Order = models.Order || model('Order', orderSchema);
 export default Order;

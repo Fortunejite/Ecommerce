@@ -1,4 +1,4 @@
-import { Schema, model, models } from 'mongoose';
+import { InferSchemaType, Schema, model, models } from 'mongoose';
 
 const categorySchema = new Schema(
   {
@@ -10,6 +10,8 @@ const categorySchema = new Schema(
   },
   { timestamps: true },
 );
+
+export type ICategory = InferSchemaType<typeof categorySchema>
 
 const Category = models.Category || model('Category', categorySchema);
 export default Category;

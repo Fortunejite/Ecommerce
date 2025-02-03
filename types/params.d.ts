@@ -1,0 +1,1 @@
+type tParams = Promise<{ id: string }>

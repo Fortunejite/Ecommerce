@@ -1,4 +1,4 @@
-import { Schema, model, models } from 'mongoose';
+import { InferSchemaType, Schema, model, models } from 'mongoose';
 import bcrypt from "bcrypt";
 
 const userSchema = new Schema(
@@ -6,6 +6,7 @@ const userSchema = new Schema(
     name: {
       type: String,
       required: true,
+      minlength: [3, "Name must be at least 3 characters long"]
     },
     phoneNumber: {
       type: String,
@@ -13,8 +14,9 @@ const userSchema = new Schema(
     },
     email: {
       type: String,
-      required: true,
+      required: [true, "Email is required"],
       unique: true,
+      match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
     },
     password: {
       type: String,
@@ -56,6 +58,8 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.comparePassword = async function (password: string): Promise<boolean> {
   return bcrypt.compare(password, this.password);
 };
+
+export type IUser = InferSchemaType<typeof userSchema>
 
 const User = models.User || model('User', userSchema);
 export default User;
