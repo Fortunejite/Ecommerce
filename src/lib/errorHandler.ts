@@ -9,7 +9,7 @@ export function errorHandler(error: unknown): string {
     //   store.dispatch(logout());
     // }
     const message = error.response?.data?.message || 'An error occurred';
-    console.error('Error:', message);
+    console.error('Error:', error);
     return message;
   }
 

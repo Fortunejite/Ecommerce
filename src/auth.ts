@@ -37,7 +37,7 @@ const option: NextAuthConfig = {
           email: user.email,
           avatar: user.avatar,
           name: user.name,
-          isAdmin: user.isAdmin
+          isAdmin: user.isAdmin,
         } as unknown as User;
       },
     }),
@@ -75,13 +75,14 @@ const option: NextAuthConfig = {
         } else return token;
       } else {
         // Fallback for other providers or if account is not defined
-        token._id = user._id.toString();
-        token.email = user.email || '';
-        token.avatar = user.avatar;
-        token.isAdmin = user.isAdmin;
-        token.name = user.name || '';
+        if (user) {
+          token._id = user._id.toString();
+          token.email = user.email || '';
+          token.avatar = user.avatar;
+          token.isAdmin = user.isAdmin;
+          token.name = user.name || '';
+        }
       }
-
       return token;
     },
     async session({ session, token }) {

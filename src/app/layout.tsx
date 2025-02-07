@@ -20,7 +20,7 @@ export default async function RootLayout({
     <html lang='en'>
       <body>
         <ProvidersAndNavbar>
-          <Stack spacing={2} flex={1}>
+          <Stack spacing={2} flex={1} bgcolor={'background.default'} color={'text.primary'}>
             <Box flex={2}>{children}</Box>
             <Footer />
           </Stack>
