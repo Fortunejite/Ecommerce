@@ -46,6 +46,8 @@ import {
 
 import { useAppDispatch, useAppSelector } from '@/hooks/redux.hook';
 import { fetchFavourite } from '@/redux/favouriteSlice';
+import { fetchCategories } from '@/redux/categorySlice';
+import { fetchTags } from '@/redux/tagSlice';
 
 interface NavbarProps {
   mode: 'light' | 'dark';
@@ -200,6 +202,11 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
   useEffect(() => {
     user && status === 'idle' && dispatch(fetchFavourite());
   }, [dispatch, user]);
+
+  useEffect(() => {
+    dispatch(fetchCategories())
+    dispatch(fetchTags())
+  }, [])
 
   const handleMenuOpen = (e: MouseEvent<HTMLElement>) => {
     setAnchorEl(e.currentTarget);
