@@ -1,7 +1,10 @@
 'use client';
 
+import { useAppDispatch, useAppSelector } from '@/hooks/redux.hook';
 import { IProduct } from '@/models/Product.model';
+import { selectIsFavourite, toggleFavourite } from '@/redux/favouriteSlice';
 import {
+  Favorite,
   FavoriteBorderOutlined,
   VisibilityOutlined,
 } from '@mui/icons-material';
@@ -76,8 +79,11 @@ const PriceSection = ({ product }: { product: IProduct }) => {
 };
 
 const Product = ({ product }: ProductProps) => {
-  const router = useRouter()
-
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const isFavourite = useAppSelector((state) =>
+    selectIsFavourite(state, product._id),
+  );
   return (
     <Paper
       sx={{
@@ -86,15 +92,24 @@ const Product = ({ product }: ProductProps) => {
           transform: 'scale(1.05)',
         },
       }}
-      onClick={() => router.push(`/${product._id}`)}
+      onClick={() => router.push(`/products/${product._id}`)}
     >
       <ImageContainter>
         <Box sx={{ position: 'relative', width: '70%', height: '100%' }}>
-          <Image src={'/keyboard.png'} alt={product.name} fill objectFit='contain' />
+          <Image src={'/pad.png'} alt={product.name} fill objectFit='contain' />
         </Box>
         <Icons>
-          <IconsButton>
-            <FavoriteBorderOutlined fontSize='small' />
+          <IconsButton
+            onClick={(e) => {
+              e.stopPropagation();
+              dispatch(toggleFavourite(product._id));
+            }}
+          >
+            {isFavourite ? (
+              <Favorite color='error' />
+            ) : (
+              <FavoriteBorderOutlined fontSize='small' />
+            )}
           </IconsButton>
           <IconsButton>
             <VisibilityOutlined fontSize='small' />

@@ -20,8 +20,12 @@ export async function DELETE(
 
     const { user } = session;
 
-    await User.findByIdAndUpdate(user._id, { $pull: { favourite: id } });
-    return NextResponse.json({ message: 'Successfull' });
+    const { favourite } = await User.findByIdAndUpdate(
+      user._id,
+      { $pull: { favourite: id } },
+      { new: true },
+    ).populate('favourite');
+    return NextResponse.json(favourite);
   } catch (error) {
     console.error('DELETE /favourite/[id] error:', error);
     return NextResponse.json(

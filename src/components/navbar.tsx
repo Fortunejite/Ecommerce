@@ -36,7 +36,16 @@ import {
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Dispatch, MouseEvent, SetStateAction, useState } from 'react';
+import {
+  Dispatch,
+  MouseEvent,
+  SetStateAction,
+  useEffect,
+  useState,
+} from 'react';
+
+import { useAppDispatch, useAppSelector } from '@/hooks/redux.hook';
+import { fetchFavourite } from '@/redux/favouriteSlice';
 
 interface NavbarProps {
   mode: 'light' | 'dark';
@@ -179,11 +188,18 @@ const Drawer = ({ open, setOpen, mode, setMode }: DrawerProps) => (
 const Navbar = ({ mode, setMode }: NavbarProps) => {
   const session = useSession();
   const pathname = usePathname();
+  const dispatch = useAppDispatch();
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const { status } = useAppSelector((state) => state.favourite);
+
   const menuOpen = Boolean(anchorEl);
 
   const user = session.data?.user;
+
+  useEffect(() => {
+    user && status === 'idle' && dispatch(fetchFavourite());
+  }, [dispatch, user]);
 
   const handleMenuOpen = (e: MouseEvent<HTMLElement>) => {
     setAnchorEl(e.currentTarget);

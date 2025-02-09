@@ -9,7 +9,7 @@ export async function GET() {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 
     const { user } = session;
-    const { favourite } = await User.findById(user._id);
+    const { favourite } = await User.findById(user._id).populate('favourite');
     return NextResponse.json(favourite);
   } catch (e) {
     console.log(e);
@@ -23,13 +23,17 @@ export async function POST(request: NextRequest) {
     if (!session)
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 
-    const body = await request.json();
+    const { productId } = await request.json();
 
     const { user } = session;
-    await User.findByIdAndUpdate(user._id, {
-      $push: { favourite: body },
-    });
-    return NextResponse.json({ message: 'Successfull' });
+    const { favourite } = await User.findByIdAndUpdate(
+      user._id,
+      {
+        $push: { favourite: productId },
+      },
+      { new: true },
+    ).populate('favourite');;
+    return NextResponse.json(favourite);
   } catch (e) {
     console.log(e);
     return NextResponse.json({}, { status: 500 });
