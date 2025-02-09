@@ -60,7 +60,10 @@ userSchema.methods.comparePassword = async function (password: string): Promise<
   return bcrypt.compare(password, this.password);
 };
 
-export type IUser = InferSchemaType<typeof userSchema>
+export type inferredFields = InferSchemaType<typeof userSchema>;
+export type IUser = {
+  _id: Schema.Types.ObjectId;
+} & inferredFields;
 
 const User = models.User || model('User', userSchema);
 export default User;

@@ -6,17 +6,17 @@ const theme = (mode: PaletteMode) =>
     palette: {
       mode,
       primary: {
-        main: '#1976D2', // Blue
-        dark: '#0D47A1', // Dark Blue
+        main: '#DB4444',
+        dark: '#DB4444',
         contrastText: '#FFFFFF',
       },
       secondary: {
-        main: '#FF9800', // Orange
-        dark: '#E65100', // Dark Orange
-        contrastText: '#FFFFFF',
+        main: mode === 'light' ? '#F5F5F5' : '#1e1e1e',
+        dark: '#E65100',
+        contrastText: mode === 'light' ? '#212121' : '#FFFFFF',
       },
       background: {
-        default: mode === 'light' ? '#F5F5F5' : '#121212', // Neutral Light or Dark
+        default: mode === 'light' ? '#FFFFFF' : '#121212', // Neutral Light or Dark
         paper: mode === 'light' ? '#FFFFFF' : '#1E1E1E', // Card/Modal Background
       },
       text: {

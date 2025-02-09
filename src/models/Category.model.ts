@@ -11,7 +11,10 @@ const categorySchema = new Schema(
   { timestamps: true },
 );
 
-export type ICategory = InferSchemaType<typeof categorySchema>
+export type inferredFields = InferSchemaType<typeof categorySchema>;
+export type ICategory = {
+  _id: Schema.Types.ObjectId;
+} & inferredFields;
 
 const Category = models.Category || model('Category', categorySchema);
 export default Category;

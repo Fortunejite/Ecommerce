@@ -42,7 +42,10 @@ const orderSchema = new Schema(
   { timestamps: true },
 );
 
-export type IOrder = InferSchemaType<typeof orderSchema>
+export type inferredFields = InferSchemaType<typeof orderSchema>;
+export type IOrder = {
+  _id: Schema.Types.ObjectId;
+} & inferredFields;
 
 const Order = models.Order || model('Order', orderSchema);
 export default Order;

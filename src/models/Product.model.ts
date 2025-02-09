@@ -77,7 +77,10 @@ const productSchema = new Schema(
   { timestamps: true },
 );
 
-export type IProduct = InferSchemaType<typeof productSchema>
+export type inferredFields = InferSchemaType<typeof productSchema>;
+export type IProduct = {
+  _id: Schema.Types.ObjectId;
+} & inferredFields;
 
 const Product = models.Product || model('Product', productSchema);
 export default Product;

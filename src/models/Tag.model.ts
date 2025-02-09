@@ -11,7 +11,10 @@ const tagSchema = new Schema(
   { timestamps: true },
 );
 
-export type ITag = InferSchemaType<typeof tagSchema>
+export type inferredFields = InferSchemaType<typeof tagSchema>;
+export type ITag = {
+  _id: Schema.Types.ObjectId;
+} & inferredFields;
 
 const Tag = models.Tag || model('Tag', tagSchema);
 export default Tag;
