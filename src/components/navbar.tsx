@@ -174,9 +174,15 @@ const Drawer = ({ open, setOpen, mode, setMode }: DrawerProps) => (
               <ModeSwitch
                 sx={{ m: 1 }}
                 checked={mode === 'dark'}
-                onChange={() =>
-                  setMode((prev) => (prev === 'light' ? 'dark' : 'light'))
-                }
+                onChange={() => {
+                  setMode((prev) => {
+                    localStorage.setItem(
+                      'mode',
+                      prev === 'light' ? 'dark' : 'light',
+                    );
+                    return prev === 'light' ? 'dark' : 'light';
+                  });
+                }}
               />
             }
             label={`${mode} mode`}
@@ -204,9 +210,9 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
   }, [dispatch, user]);
 
   useEffect(() => {
-    dispatch(fetchCategories())
-    dispatch(fetchTags())
-  }, [])
+    dispatch(fetchCategories());
+    dispatch(fetchTags());
+  }, []);
 
   const handleMenuOpen = (e: MouseEvent<HTMLElement>) => {
     setAnchorEl(e.currentTarget);
@@ -242,9 +248,12 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
           ))}
           <ModeSwitch
             checked={mode === 'dark'}
-            onChange={() =>
-              setMode((prev) => (prev === 'light' ? 'dark' : 'light'))
-            }
+            onChange={() => {
+              setMode((prev) => {
+                localStorage.setItem('mode', prev === 'light' ? 'dark' : 'light');
+                return prev === 'light' ? 'dark' : 'light';
+              });
+            }}
           />
         </Links>
         <Actions>
