@@ -5,7 +5,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { Provider } from 'react-redux';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from '@/theme';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from './navbar';
 import store from '@/redux/store';
 
@@ -15,6 +15,13 @@ const Proividers = ({
   children: React.ReactNode;
 }>) => {
   const [mode, setMode] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    const defaultMode = localStorage.getItem('mode');
+    defaultMode &&
+      (defaultMode === 'light' || defaultMode === 'dark') &&
+      setMode(defaultMode);
+  }, []);
 
   return (
     <Provider store={store}>
