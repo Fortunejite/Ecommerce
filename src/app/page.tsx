@@ -7,13 +7,13 @@ import { Box, Divider, Grid2, Stack, Typography } from '@mui/material';
 export default async function Home() {
   const productRes = await fetch('http://localhost:3000/api/products?limit=8');
   const categoriesRes = await fetch('http://localhost:3000/api/categories');
-  const products = (await productRes.json()) as IProduct[];
+  const products = (await productRes.json()).products as IProduct[];
   const categories = (await categoriesRes.json()) as ICategory[];
 
   return (
     <Stack p={{ xs: 1, sm: 4 }}>
       <Section title='Browse By Category' subtitle='Categories'>
-        {categories.map(({_id, name}) => (
+        {categories.map(({ _id, name }) => (
           <Stack key={_id.toString()}>
             <Typography variant='h6'>{name}</Typography>
           </Stack>

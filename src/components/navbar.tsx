@@ -199,7 +199,7 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
   const dispatch = useAppDispatch();
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const { status } = useAppSelector((state) => state.favourite);
+  const { status, products } = useAppSelector((state) => state.favourite);
 
   const menuOpen = Boolean(anchorEl);
 
@@ -250,7 +250,10 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
             checked={mode === 'dark'}
             onChange={() => {
               setMode((prev) => {
-                localStorage.setItem('mode', prev === 'light' ? 'dark' : 'light');
+                localStorage.setItem(
+                  'mode',
+                  prev === 'light' ? 'dark' : 'light',
+                );
                 return prev === 'light' ? 'dark' : 'light';
               });
             }}
@@ -258,7 +261,7 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
         </Links>
         <Actions>
           <Link href={'/favourite'}>
-            <Badge badgeContent={4} color='primary'>
+            <Badge badgeContent={products.length} color='primary'>
               <FavoriteBorderOutlined />
             </Badge>
           </Link>

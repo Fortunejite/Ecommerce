@@ -13,24 +13,27 @@ export async function GET(request: NextRequest) {
     const category = request.nextUrl.searchParams.get('category');
     const minPrice = request.nextUrl.searchParams.get('minPrice');
     const maxPrice = request.nextUrl.searchParams.get('maxPrice');
-    const rating = Number(request.nextUrl.searchParams.get('rating'));
+    const rating = Number(request.nextUrl.searchParams.get('ratings'));
 
     const skip = (page - 1) * limit;
     const query = {
       ...(name && { name }),
-      ...(tags && { tags: { $in: tags } }),
-      ...(category && { category: { $in: category } }),
+      ...(tags && { tags: { $in: tags.split(',') } }),
+      ...(category && { category: { $in: category.split(',') } }),
       ...(minPrice && { price: { $gte: minPrice } }),
       ...(maxPrice && { price: { $lte: maxPrice } }),
       ...(rating && { rating: { $gte: rating } }),
     };
 
-    const products = await Product.find(query)
-      .skip(skip)
-      .limit(limit)
-      .populate('tags')
-      .populate('category');
-    return NextResponse.json(products);
+    const [products, totalCount] = await Promise.all([
+      Product.find(query)
+        .skip(skip)
+        .limit(limit)
+        .populate('tags')
+        .populate('category'),
+      Product.countDocuments(query).exec(),
+    ]);
+    return NextResponse.json({ products, totalCount });
   } catch (e) {
     console.log(e);
     return NextResponse.json({}, { status: 500 });
