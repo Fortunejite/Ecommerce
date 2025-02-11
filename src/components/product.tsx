@@ -2,6 +2,7 @@
 
 import { useAppDispatch, useAppSelector } from '@/hooks/redux.hook';
 import { IProduct } from '@/models/Product.model';
+import { selectInCart, toggleCart } from '@/redux/cartSlice';
 import { selectIsFavourite, toggleFavourite } from '@/redux/favouriteSlice';
 import {
   Favorite,
@@ -17,6 +18,7 @@ import {
   styled,
   IconButton,
   Paper,
+  Button,
 } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -84,12 +86,16 @@ const Product = ({ product }: ProductProps) => {
   const isFavourite = useAppSelector((state) =>
     selectIsFavourite(state, product._id),
   );
+  const inCart = useAppSelector((state) => selectInCart(state, product._id));
   return (
     <Paper
       sx={{
         transition: 'transform 0.3s ease-in-out',
         '&:hover': {
           transform: 'scale(1.05)',
+        },
+        '&:hover .addToCartBtn': {
+          display: 'flex',
         },
       }}
       onClick={() => router.push(`/products/${product._id}`)}
@@ -122,6 +128,26 @@ const Product = ({ product }: ProductProps) => {
             </Typography>
           </Badge>
         )}
+        <Button
+          className={'addToCartBtn'}
+          sx={{
+            position: 'absolute',
+            bottom: 0,
+            width: '100%',
+            display: 'none',
+            backgroundColor: 'text.secondary',
+            color: 'background.default',
+          }}
+          size={'small'}
+          variant={'contained'}
+          disabled={inCart}
+          onClick={(e) => {
+            e.stopPropagation();
+            dispatch(toggleCart(product._id));
+          }}
+        >
+          Add{inCart && 'ed'} to cart
+        </Button>
       </ImageContainter>
       <Stack p={1}>
         <Typography variant='body1'>{product.name}</Typography>

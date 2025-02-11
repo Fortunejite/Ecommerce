@@ -1,14 +1,38 @@
+'use client';
+
 import Product from '@/components/product';
+import ProductSkeleton from '@/components/productSkeleton';
 import Section from '@/components/section';
+import { useAppSelector } from '@/hooks/redux.hook';
+import { errorHandler } from '@/lib/errorHandler';
 import { ICategory } from '@/models/Category.model';
 import { IProduct } from '@/models/Product.model';
-import { Box, Divider, Grid2, Stack, Typography } from '@mui/material';
+import { Box, Button, Divider, Grid2, Stack, Typography } from '@mui/material';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-export default async function Home() {
-  const productRes = await fetch('http://localhost:3000/api/products?limit=8');
-  const categoriesRes = await fetch('http://localhost:3000/api/categories');
-  const products = (await productRes.json()).products as IProduct[];
-  const categories = (await categoriesRes.json()) as ICategory[];
+export default function Home() {
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { categories } = useAppSelector((state) => state.category);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await axios.get('/api/products?limit=8');
+        const { products } = res.data;
+        setProducts(products);
+      } catch (e) {
+        console.log(errorHandler(e));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   return (
     <Stack p={{ xs: 1, sm: 4 }}>
@@ -20,11 +44,24 @@ export default async function Home() {
         ))}
       </Section>
       <Section title='Explore our products' subtitle='Our Products'>
-        {products.map((product) => (
-          <Grid2 size={{ xs: 6, sm: 3 }}>
-            <Product key={product._id.toString()} product={product} />
-          </Grid2>
-        ))}
+        {loading
+          ? [1, 2, 3, 4].map(() => (
+              <Grid2 size={{ xs: 6, sm: 3 }}>
+                <ProductSkeleton />
+              </Grid2>
+            ))
+          : products.map((product) => (
+              <Grid2 size={{ xs: 6, sm: 3 }}>
+                <Product key={product._id.toString()} product={product} />
+              </Grid2>
+            ))}
+        <Button
+          sx={{ margin: '0 auto' }}
+          variant='contained'
+          onClick={() => router.push('/products')}
+        >
+          View All Products
+        </Button>
       </Section>
     </Stack>
   );
