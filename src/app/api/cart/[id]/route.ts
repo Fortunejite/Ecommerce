@@ -20,8 +20,12 @@ export async function DELETE(
 
     const { user } = session;
 
-    await User.findByIdAndUpdate(user._id, { $pull: { cart: id } });
-    return NextResponse.json({ message: 'Successfull' });
+    const { cart } = await User.findByIdAndUpdate(
+      user._id,
+      { $pull: { cart: id } },
+      { new: true },
+    ).populate('cart');
+    return NextResponse.json(cart);
   } catch (error) {
     console.error('DELETE /cart/[id] error:', error);
     return NextResponse.json(

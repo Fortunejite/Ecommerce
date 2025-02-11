@@ -48,6 +48,7 @@ import { useAppDispatch, useAppSelector } from '@/hooks/redux.hook';
 import { fetchFavourite } from '@/redux/favouriteSlice';
 import { fetchCategories } from '@/redux/categorySlice';
 import { fetchTags } from '@/redux/tagSlice';
+import { fetchCart } from '@/redux/cartSlice';
 
 interface NavbarProps {
   mode: 'light' | 'dark';
@@ -199,14 +200,16 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
   const dispatch = useAppDispatch();
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const { status, products } = useAppSelector((state) => state.favourite);
+  const { status: favouriteStatus, products: favorites } = useAppSelector((state) => state.favourite);
+  const { status: cartStatus, products: cart } = useAppSelector((state) => state.cart);
 
   const menuOpen = Boolean(anchorEl);
 
   const user = session.data?.user;
 
   useEffect(() => {
-    user && status === 'idle' && dispatch(fetchFavourite());
+    user && favouriteStatus === 'idle' && dispatch(fetchFavourite());
+    user && cartStatus === 'idle' && dispatch(fetchCart());
   }, [dispatch, user]);
 
   useEffect(() => {
@@ -261,12 +264,12 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
         </Links>
         <Actions>
           <Link href={'/favourite'}>
-            <Badge badgeContent={products.length} color='primary'>
+            <Badge badgeContent={favorites.length} color='primary'>
               <FavoriteBorderOutlined />
             </Badge>
           </Link>
           <Link href={'/cart'}>
-            <Badge badgeContent={4} color='primary'>
+            <Badge badgeContent={cart.length} color='primary'>
               <ShoppingCartOutlined />
             </Badge>
           </Link>

@@ -23,13 +23,17 @@ export async function POST(request: NextRequest) {
     if (!session)
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 
-    const body = await request.json();
+    const { productId } = await request.json();
 
     const { user } = session;
-    await User.findByIdAndUpdate(user._id, {
-      $push: { cart: body },
-    });
-    return NextResponse.json({ message: 'Successfull' });
+    const { cart } = await User.findByIdAndUpdate(
+      user._id,
+      {
+        $push: { cart: productId },
+      },
+      { new: true },
+    ).populate('cart');
+    return NextResponse.json(cart);
   } catch (e) {
     console.log(e);
     return NextResponse.json({}, { status: 500 });
