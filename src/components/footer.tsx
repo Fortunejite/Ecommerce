@@ -22,6 +22,7 @@ const StyledBox = styled(Box)(({ theme }) => ({
   gap: '16px',
   [theme.breakpoints.down('sm')]: {
     flexDirection: 'column',
+    padding: '8px'
   },
 }));
 const StyledTypography = styled(Typography)( ({

@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import User from '@/models/User.model';
+import Cart from '@/models/Cart';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
@@ -9,8 +9,8 @@ export async function GET() {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 
     const { user } = session;
-    const { cart } = await User.findById(user._id);
-    return NextResponse.json(cart);
+    const { items } = await Cart.findOne({ user: user._id });
+    return NextResponse.json(items);
   } catch (e) {
     console.log(e);
     return NextResponse.json({}, { status: 500 });
@@ -23,17 +23,17 @@ export async function POST(request: NextRequest) {
     if (!session)
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 
-    const { productId } = await request.json();
+    const { productId, quantity } = await request.json();
 
     const { user } = session;
-    const { cart } = await User.findByIdAndUpdate(
-      user._id,
+    const { items } = await Cart.findOneAndUpdate(
+      { user: user._id },
       {
-        $push: { cart: productId },
+        $push: { items: { product: productId, quantity: quantity || 1 } },
       },
       { new: true },
-    ).populate('cart');
-    return NextResponse.json(cart);
+    ).populate('items');
+    return NextResponse.json(items);
   } catch (e) {
     console.log(e);
     return NextResponse.json({}, { status: 500 });

@@ -1,13 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { errorHandler } from '@/lib/errorHandler';
-import { IUser } from '@/models/User.model';
 import axios from 'axios';
 import { IProduct } from '@/models/Product.model';
+import { ICart } from '@/models/Cart';
 
 interface IInitialState {
   error: string | null;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
-  products: IProduct[];
+  items: ICart['items'];
 }
 
 // Thunks for handling async operations
@@ -30,9 +30,7 @@ export const toggleCart = createAsyncThunk(
     const { cart } = getState() as {
       cart: IInitialState;
     };
-    const isCart = cart.products.find(
-      (product) => product._id === productId,
-    );
+    const isCart = cart.items.find((item) => item.product === productId);
     try {
       if (isCart) {
         const response = await axios.delete(`/api/cart/${productId}`);
@@ -49,9 +47,34 @@ export const toggleCart = createAsyncThunk(
     }
   },
 );
+export const updateQuantity = createAsyncThunk(
+  'cart/updateQuantity',
+  async (
+    { productId, quantity }: { productId: IProduct['_id']; quantity: number },
+    { rejectWithValue, getState },
+  ) => {
+    const { cart } = getState() as {
+      cart: IInitialState;
+    };
+    const isCart = cart.items.find((item) => item.product === productId);
+    try {
+      if (isCart) {
+        const response = await axios.patch(`/api/cart/${productId}`, {
+          quantity,
+        });
+        return response.data;
+      } else {
+        return rejectWithValue('Item not found');
+      }
+    } catch (error) {
+      const errorMessage = errorHandler(error);
+      return rejectWithValue(errorMessage);
+    }
+  },
+);
 
 const initialState: IInitialState = {
-  products: [],
+  items: [] as unknown as ICart['items'],
   status: 'idle',
   error: null,
 };
@@ -63,12 +86,9 @@ const favoriteSlice = createSlice({
   extraReducers: (builder) => {
     // Handle fetchCart
     builder
-      .addCase(fetchCart.pending, (state) => {
-        state.status = 'loading';
-      })
       .addCase(fetchCart.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.products = action.payload;
+        state.items = action.payload;
       })
       .addCase(fetchCart.rejected, (state, action) => {
         state.status = 'failed';
@@ -83,9 +103,24 @@ const favoriteSlice = createSlice({
       })
       .addCase(toggleCart.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.products = action.payload;
+        state.items = action.payload;
       })
       .addCase(toggleCart.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload as string;
+      });
+
+    // Handle updateQuantity
+    builder
+      .addCase(updateQuantity.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(updateQuantity.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.items = action.payload;
+      })
+      .addCase(updateQuantity.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload as string;
       });
@@ -97,6 +132,6 @@ export const selectInCart = (
     cart: IInitialState;
   },
   productId: IProduct['_id'],
-) => !!state.cart.products.find((product) => product._id === productId);
+) => !!state.cart.items.find((item) => item.product === productId);
 
 export default favoriteSlice.reducer;

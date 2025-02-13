@@ -15,6 +15,7 @@ const productSchema = new Schema(
     ],
     category: {
       type: Schema.Types.ObjectId,
+      required: [true, 'A category is required'],
       ref: 'Tag',
     },
     sizes: [

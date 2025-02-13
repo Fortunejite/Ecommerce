@@ -14,7 +14,6 @@ import { IProduct } from '@/models/Product.model';
 import Product from '@/components/product';
 import { Tune } from '@mui/icons-material';
 import { errorHandler } from '@/lib/errorHandler';
-import { useRouter } from 'next/router';
 import axios from 'axios';
 import ProductSkeleton from '@/components/productSkeleton';
 
@@ -33,7 +32,6 @@ export default function Products() {
 
   useEffect(() => {
     setCurrentPage(1);
-    console.log(pageCount)
   }, [count]);
 
   useEffect(() => {
@@ -101,16 +99,16 @@ export default function Products() {
 
       {loading ? (
         <Grid2 container spacing={2} marginBottom={2} marginTop={2}>
-          {[1, 2, 3, 4].map(() => (
-            <Grid2 size={{ xs: 6, sm: 3 }}>
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((_, i) => (
+            <Grid2 key={i} size={{ xs: 6, sm: 3 }}>
               <ProductSkeleton />
             </Grid2>
           ))}
         </Grid2>
       ) : products.length ? (
         <Grid2 container spacing={2} marginBottom={2} marginTop={2}>
-          {products.map((product) => (
-            <Grid2 size={{ xs: 6, sm: 3 }}>
+          {products.map((product, i) => (
+            <Grid2 key={i} size={{ xs: 6, sm: 3 }}>
               <Product key={product._id.toString()} product={product} />
             </Grid2>
           ))}

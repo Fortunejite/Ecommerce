@@ -10,7 +10,7 @@ export const createRandomProducts = async () => {
 
   const randomProducts = [];
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 50; i++) {
     const product = {
       name: `Product ${i + 1}`,
       description: `This is a random description for product ${i + 1}.`,
@@ -21,11 +21,12 @@ export const createRandomProducts = async () => {
       price: Math.floor(Math.random() * 5000) + 500, // Random price (500-5000)
       colors: ["Red", "Blue", "Green", "Black", "White"].filter(() => Math.random() > 0.5), // Random colors
       discount: Math.random() > 0.5 ? Math.floor(Math.random() * 30) : 0, // Random discount (0-30%)
-      mainPic: `https://source.unsplash.com/random/300x300?sig=${i}`, // Random image
+      mainPic: i % 2 ? '/pad.png' : '/keyboard.png', // Random image
       otherImages: [
-        `https://source.unsplash.com/random/300x300?sig=${i + 10}`,
-        `https://source.unsplash.com/random/300x300?sig=${i + 20}`,
-      ], // 2 extra images
+        '/pad.png',
+        '/keyboard.png',
+        '/pad.png',
+      ], // 3 extra images
       isFeatured: Math.random() > 0.7, // 30% chance of being featured
       sales: Math.floor(Math.random() * 500), // Random sales count
       rating: (Math.random() * 5).toFixed(1), // Random rating (0-5)

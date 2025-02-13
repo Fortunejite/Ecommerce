@@ -12,7 +12,6 @@ import {
 import {
   Stack,
   Typography,
-  Grid2,
   Rating,
   Box,
   styled,
@@ -102,7 +101,7 @@ const Product = ({ product }: ProductProps) => {
     >
       <ImageContainter>
         <Box sx={{ position: 'relative', width: '70%', height: '100%' }}>
-          <Image src={'/pad.png'} alt={product.name} fill objectFit='contain' />
+          <Image src={product.mainPic} alt={product.name} fill objectFit='contain' />
         </Box>
         <Icons>
           <IconsButton

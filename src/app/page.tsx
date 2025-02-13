@@ -5,9 +5,8 @@ import ProductSkeleton from '@/components/productSkeleton';
 import Section from '@/components/section';
 import { useAppSelector } from '@/hooks/redux.hook';
 import { errorHandler } from '@/lib/errorHandler';
-import { ICategory } from '@/models/Category.model';
 import { IProduct } from '@/models/Product.model';
-import { Box, Button, Divider, Grid2, Stack, Typography } from '@mui/material';
+import { Button, Grid2, Stack, Typography } from '@mui/material';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -45,13 +44,13 @@ export default function Home() {
       </Section>
       <Section title='Explore our products' subtitle='Our Products'>
         {loading
-          ? [1, 2, 3, 4].map(() => (
-              <Grid2 size={{ xs: 6, sm: 3 }}>
+          ? [1, 2, 3, 4].map((_, i) => (
+              <Grid2 key={i} size={{ xs: 6, sm: 3 }}>
                 <ProductSkeleton />
               </Grid2>
             ))
-          : products.map((product) => (
-              <Grid2 size={{ xs: 6, sm: 3 }}>
+          : products.map((product, i) => (
+              <Grid2 key={i} size={{ xs: 6, sm: 3 }}>
                 <Product key={product._id.toString()} product={product} />
               </Grid2>
             ))}

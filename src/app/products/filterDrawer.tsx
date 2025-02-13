@@ -8,8 +8,6 @@ import {
   Box,
   Button,
   Chip,
-  Divider,
-  Grid2,
   IconButton,
   InputAdornment,
   Rating,
@@ -148,8 +146,9 @@ const FilterDrawer = ({
         <Section>
           <Typography variant='h6'>Categories</Typography>
           <Stack direction={'row'} gap={1} flexWrap={'wrap'}>
-            {categories.map((category) => (
+            {categories.map((category, i) => (
               <Chip
+                key={i}
                 variant={
                   filters.categories.includes(category._id)
                     ? 'filled'
@@ -164,8 +163,9 @@ const FilterDrawer = ({
         <Section>
           <Typography variant='h6'>Tags</Typography>
           <Stack direction={'row'} gap={1} flexWrap={'wrap'}>
-            {tags.map((tag) => (
+            {tags.map((tag, i) => (
               <Chip
+                key={i}
                 variant={filters.tags.includes(tag._id) ? 'filled' : 'outlined'}
                 onClick={() => toggleTag(tag._id)}
                 label={tag.name}

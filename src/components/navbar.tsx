@@ -72,6 +72,9 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   justifyContent: 'space-between',
   backgroundColor: theme.palette.background.default,
   color: theme.palette.text.primary,
+  [theme.breakpoints.down('sm')]: {
+    padding: '0',
+  },
 }));
 
 const Actions = styled(Box)({
@@ -200,17 +203,25 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
   const dispatch = useAppDispatch();
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const { status: favouriteStatus, products: favorites } = useAppSelector((state) => state.favourite);
-  const { status: cartStatus, products: cart } = useAppSelector((state) => state.cart);
+  const { status: favouriteStatus, products: favorites } = useAppSelector(
+    (state) => state.favourite,
+  );
+  const { status: cartStatus, items: cart } = useAppSelector(
+    (state) => state.cart,
+  );
 
   const menuOpen = Boolean(anchorEl);
 
   const user = session.data?.user;
 
   useEffect(() => {
-    user && favouriteStatus === 'idle' && dispatch(fetchFavourite());
-    user && cartStatus === 'idle' && dispatch(fetchCart());
-  }, [dispatch, user]);
+    if (user && favouriteStatus === 'idle') {
+      dispatch(fetchFavourite());
+    }
+    if (user && cartStatus === 'idle') {
+      dispatch(fetchCart());
+    }
+  }, [cartStatus, dispatch, favouriteStatus, user]);
 
   useEffect(() => {
     dispatch(fetchCategories());
