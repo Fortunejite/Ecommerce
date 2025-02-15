@@ -1,4 +1,4 @@
-import Cart from '@/models/Cart';
+import Cart from '@/models/Cart.model';
 import User from '@/models/User.model';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';

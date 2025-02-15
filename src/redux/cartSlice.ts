@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { errorHandler } from '@/lib/errorHandler';
 import axios from 'axios';
 import { IProduct } from '@/models/Product.model';
-import { ICart } from '@/models/Cart';
+import { ICart } from '@/models/Cart.model';
 
 interface IInitialState {
   error: string | null;
@@ -30,7 +30,9 @@ export const toggleCart = createAsyncThunk(
     const { cart } = getState() as {
       cart: IInitialState;
     };
-    const isCart = cart.items.find((item) => item.product === productId);
+    const isCart = cart.items.find(
+      (item) => (item.product as IProduct)._id === productId,
+    );
     try {
       if (isCart) {
         const response = await axios.delete(`/api/cart/${productId}`);
@@ -56,7 +58,9 @@ export const updateQuantity = createAsyncThunk(
     const { cart } = getState() as {
       cart: IInitialState;
     };
-    const isCart = cart.items.find((item) => item.product === productId);
+    const isCart = cart.items.find(
+      (item) => (item.product as IProduct)._id === productId,
+    );
     try {
       if (isCart) {
         const response = await axios.patch(`/api/cart/${productId}`, {
@@ -79,10 +83,14 @@ const initialState: IInitialState = {
   error: null,
 };
 
-const favoriteSlice = createSlice({
+const cartSlice = createSlice({
   name: 'cart',
   initialState,
-  reducers: {},
+  reducers: {
+    clearCart: (state: IInitialState) => {
+      state.items = [] as unknown as ICart['items'];
+    },
+  },
   extraReducers: (builder) => {
     // Handle fetchCart
     builder
@@ -132,6 +140,10 @@ export const selectInCart = (
     cart: IInitialState;
   },
   productId: IProduct['_id'],
-) => !!state.cart.items.find((item) => item.product === productId);
+) =>
+  !!state.cart.items.find(
+    (item) => (item.product as IProduct)._id === productId,
+  );
 
-export default favoriteSlice.reducer;
+export const { clearCart } = cartSlice.actions;
+export default cartSlice.reducer;

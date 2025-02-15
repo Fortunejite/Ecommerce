@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import Cart from '@/models/Cart';
+import Cart from '@/models/Cart.model';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function DELETE(
@@ -24,7 +24,7 @@ export async function DELETE(
       { user: user._id },
       { $pull: { items: { product: id } } },
       { new: true },
-    ).populate('items');
+    ).populate('items.product');
     return NextResponse.json(items);
   } catch (error) {
     console.error('DELETE /cart/[id] error:', error);
@@ -60,7 +60,7 @@ export async function PATCH(
         $set: { 'items.$.quantity': quantity },
       },
       { new: true },
-    ).populate('items');
+    ).populate('items.product');
     return NextResponse.json(items);
   } catch (e) {
     console.log(e);

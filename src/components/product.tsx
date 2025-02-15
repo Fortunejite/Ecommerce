@@ -1,6 +1,7 @@
 'use client';
 
 import { useAppDispatch, useAppSelector } from '@/hooks/redux.hook';
+import { formatNumber } from '@/lib/formatNumber';
 import { IProduct } from '@/models/Product.model';
 import { selectInCart, toggleCart } from '@/redux/cartSlice';
 import { selectIsFavourite, toggleFavourite } from '@/redux/favouriteSlice';
@@ -64,17 +65,17 @@ const PriceSection = ({ product }: { product: IProduct }) => {
     return (
       <Stack direction='row' spacing={1}>
         <Typography variant='body1' color='primary'>
-          ${discountAmount.toFixed(0)}
+          ₦{formatNumber(discountAmount.toFixed(0))}
         </Typography>
         <Typography variant='body2' sx={{ textDecoration: 'line-through' }}>
-          ${product.price.toFixed(0)}
+          ₦{formatNumber(product.price.toFixed(0))}
         </Typography>
       </Stack>
     );
   }
   return (
     <Typography variant='body1' color='primary'>
-      ${product.price.toFixed(0)}
+      ₦{formatNumber(product.price.toFixed(0))}
     </Typography>
   );
 };
@@ -101,7 +102,12 @@ const Product = ({ product }: ProductProps) => {
     >
       <ImageContainter>
         <Box sx={{ position: 'relative', width: '70%', height: '100%' }}>
-          <Image src={product.mainPic} alt={product.name} fill objectFit='contain' />
+          <Image
+            src={product.mainPic}
+            alt={product.name}
+            fill
+            objectFit='contain'
+          />
         </Box>
         <Icons>
           <IconsButton

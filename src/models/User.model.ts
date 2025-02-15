@@ -26,6 +26,12 @@ const userSchema = new Schema(
     avatar: {
       type: String,
     },
+    address: {
+      type: String,
+    },
+    city: {
+      type: String,
+    },
     isAdmin: {
       type: Boolean,
       default: false,
@@ -33,12 +39,6 @@ const userSchema = new Schema(
     provider: {
       type: String,
     },
-    cart: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Product',
-      },
-    ],
     favourite: [
       {
         type: Schema.Types.ObjectId,

@@ -6,14 +6,15 @@ const orderSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
-    products: [
+    cartItems: [
       {
         product: {
           type: Schema.Types.ObjectId,
           ref: 'Product',
           required: true,
         },
-        quantity: { type: Number, required: true, default: 1 },
+        quantity: { type: Number, required: true },
+        price: { type: Number, required: true },
       },
     ],
     totalAmount: {
@@ -22,21 +23,39 @@ const orderSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'shipped', 'delivered', 'canceled'],
-      default: 'pending',
+      enum: ['processing', 'shipped', 'delivered', 'canceled'],
+      default: 'processing',
     },
     paymentMethod: {
       type: String,
-      enem: ['card', 'paypal', 'crypto', 'cash'],
+      enem: ['paystack', 'cash'],
       required: true,
     },
-    deliveryAddress: {
+    paymentReference: {
       type: String,
-      required: true,
+      unique: [true, 'Payment Reference must be unique'],
     },
-    orderDate: {
-      type: Date,
-      default: Date.now(),
+    shipmentInfo: {
+      address: {
+        type: String,
+        required: [true, 'Address is required'],
+      },
+      city: {
+        type: String,
+        required: [true, 'City is required'],
+      },
+      name: {
+        type: String,
+        required: [true, 'Name is required'],
+      },
+      email: {
+        type: String,
+        required: [true, 'Email is required'],
+      },
+      phoneNumber: {
+        type: String,
+        required: [true, 'Phone is required'],
+      },
     },
   },
   { timestamps: true },

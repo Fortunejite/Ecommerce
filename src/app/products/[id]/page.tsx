@@ -2,7 +2,7 @@
 
 import Section from '@/components/section';
 import { errorHandler } from '@/lib/errorHandler';
-import Product, { IProduct } from '@/models/Product.model';
+import { IProduct } from '@/models/Product.model';
 import {
   Box,
   Breadcrumbs,
@@ -10,7 +10,6 @@ import {
   Divider,
   Grid2,
   IconButton,
-  Paper,
   Rating,
   Stack,
   styled,
@@ -33,6 +32,8 @@ import { useAppDispatch, useAppSelector } from '@/hooks/redux.hook';
 import { selectIsFavourite, toggleFavourite } from '@/redux/favouriteSlice';
 import CarouselComponent from '@/components/carousel';
 import { toggleCart, updateQuantity } from '@/redux/cartSlice';
+import Product from '@/components/product';
+import { formatNumber } from '@/lib/formatNumber';
 
 const ImageContainter = styled(Box)(({ theme }) => ({
   position: 'relative',
@@ -42,7 +43,7 @@ const ImageContainter = styled(Box)(({ theme }) => ({
   justifyContent: 'center',
   alignItems: 'center',
 }));
-const ButtonWrapper = styled(Paper)(({ theme }) => ({
+const ButtonWrapper = styled(Box)(({ theme }) => ({
   display: 'none',
   backgroundColor: theme.palette.background.default,
   padding: 2,
@@ -88,7 +89,7 @@ const ProductDetails = () => {
 
   const cartItem = useAppSelector((state) =>
     state.cart.items.find(
-      (item) => item.product === (product?._id as IProduct['_id']),
+      (item) => (item.product as IProduct)._id === (product?._id as IProduct['_id']),
     ),
   );
   const { status } = useAppSelector((state) => state.cart);
@@ -104,14 +105,14 @@ const ProductDetails = () => {
         const res = await axios.get(`/api/products/${id}`);
         const product = res.data;
         setProduct(product);
+        setHasDiscount(!!product.discount);
+        setCurrentImage(product.mainPic);
         const relatedProductRes = await axios.get(
           `/api/products/?category=${
-            (product.category as unknown as any).name
+            (product.category as { _id: string })._id
           }&limit=4`,
         );
         setRelatedProducts(relatedProductRes.data.products);
-        setHasDiscount(!!product.discount);
-        setCurrentImage(product.mainPic);
       } catch (e) {
         console.log(errorHandler(e));
       } finally {
@@ -120,26 +121,13 @@ const ProductDetails = () => {
     };
 
     fetchProduct();
-
-    // const fetchRelatedItems = async () => {
-    //   try {
-    //     const product = res.data;
-    //     setProduct(product);
-    //   } catch (e) {
-    //     console.log(errorHandler(e));
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-
-    // fetchRelatedItems();
   }, [id]);
 
   const addQuantity = () => {
     dispatch(
       updateQuantity({
         productId: product?._id as IProduct['_id'],
-        quantity: (cartItem?.quantity || 1 + 1) as number,
+        quantity: ((cartItem?.quantity || 1) + 1) as number,
       }),
     );
   };
@@ -147,7 +135,7 @@ const ProductDetails = () => {
     dispatch(
       updateQuantity({
         productId: product?._id as IProduct['_id'],
-        quantity: (cartItem?.quantity || 1 - 1) as number,
+        quantity: ((cartItem?.quantity || 1) - 1) as number,
       }),
     );
   };
@@ -170,7 +158,11 @@ const ProductDetails = () => {
                 spacing={1}
               >
                 <Stack spacing={1}>
-                  <ImageContainter height='25%' width='50px'>
+                  <ImageContainter
+                    onClick={() => setCurrentImage(product.mainPic)}
+                    height='25%'
+                    width='50px'
+                  >
                     <Image
                       src={product.mainPic}
                       alt={product.name}
@@ -182,7 +174,12 @@ const ProductDetails = () => {
                     />
                   </ImageContainter>
                   {product.otherImages.map((img, i) => (
-                    <ImageContainter key={i} height='25%' width='50px'>
+                    <ImageContainter
+                      key={i}
+                      onClick={() => setCurrentImage(img)}
+                      height='25%'
+                      width='50px'
+                    >
                       <Image
                         src={img}
                         alt={product.name}
@@ -212,19 +209,27 @@ const ProductDetails = () => {
               <Stack gap={1} position={'relative'}>
                 <Typography variant='h6'>{product.name}</Typography>
                 <Typography>
-                  Category: {(product.category as unknown as any).name}
+                  Category:{' '}
+                  {
+                    (
+                      product.category as unknown as {
+                        _id: string;
+                        name: string;
+                      }
+                    ).name
+                  }
                 </Typography>
                 <Divider />
                 {hasDiscount && discountAmount ? (
                   <Stack direction='row' spacing={1} alignItems={'center'}>
                     <Typography variant='h6'>
-                      ${discountAmount.toFixed(2)}
+                      ₦{formatNumber(discountAmount.toFixed(2))}
                     </Typography>
                     <Typography
                       variant='body2'
                       sx={{ textDecoration: 'line-through' }}
                     >
-                      ${product.price.toFixed(2)}
+                      ₦{formatNumber(product.price.toFixed(2))}
                     </Typography>
                     <Typography
                       variant='body2'
@@ -239,7 +244,7 @@ const ProductDetails = () => {
                   </Stack>
                 ) : (
                   <Typography variant='h6'>
-                    ${product.price.toFixed(2)}
+                    ₦{formatNumber(product.price.toFixed(2))}
                   </Typography>
                 )}
                 <Typography
@@ -381,13 +386,15 @@ const ProductDetails = () => {
       )}
 
       {relatedProducts.length && (
-        <Section title='' subtitle='Related Item'>
-          {relatedProducts.map((product, i) => (
-            <Grid2 key={i} size={{ xs: 6, sm: 3 }}>
-              <Product key={product._id.toString()} product={product} />
-            </Grid2>
-          ))}
-        </Section>
+        <Box marginTop={2}>
+          <Section title='' subtitle='Related Item'>
+            {relatedProducts.map((product, i) => (
+              <Grid2 key={i} size={{ xs: 6, sm: 3 }}>
+                <Product key={product._id.toString()} product={product} />
+              </Grid2>
+            ))}
+          </Section>
+        </Box>
       )}
     </Stack>
   );

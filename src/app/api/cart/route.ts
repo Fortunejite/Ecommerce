@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import Cart from '@/models/Cart';
+import Cart from '@/models/Cart.model';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
@@ -9,7 +9,7 @@ export async function GET() {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 
     const { user } = session;
-    const { items } = await Cart.findOne({ user: user._id });
+    const { items } = await Cart.findOne({ user: user._id }).populate('items.product');
     return NextResponse.json(items);
   } catch (e) {
     console.log(e);
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
         $push: { items: { product: productId, quantity: quantity || 1 } },
       },
       { new: true },
-    ).populate('items');
+    ).populate('items.product');
     return NextResponse.json(items);
   } catch (e) {
     console.log(e);
