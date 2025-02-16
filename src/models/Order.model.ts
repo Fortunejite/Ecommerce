@@ -33,7 +33,6 @@ const orderSchema = new Schema(
     },
     paymentReference: {
       type: String,
-      unique: [true, 'Payment Reference must be unique'],
     },
     shipmentInfo: {
       address: {

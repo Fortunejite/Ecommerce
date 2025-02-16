@@ -16,10 +16,12 @@ import { Tune } from '@mui/icons-material';
 import { errorHandler } from '@/lib/errorHandler';
 import axios from 'axios';
 import ProductSkeleton from '@/components/productSkeleton';
+import { useSearchParams } from 'next/navigation';
 
 export default function Products() {
   const [filterOpen, setFilterOpen] = useState(false);
-  const [queryString, setQueryString] = useState('');
+  const searchParams = useSearchParams();
+  const [queryString, setQueryString] = useState(searchParams.toString());
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<IProduct[]>([]);
   const [count, setCount] = useState(0);

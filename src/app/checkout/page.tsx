@@ -111,36 +111,38 @@ const Checkout = () => {
   };
 
   const placeOrder = async () => {
-    setLoading(true);
-    if (!validateForm()) return;
-    const order = {
-      paymentMethod,
-      shipmentInfo: formData,
-    };
-
     try {
+      setLoading(true);
+      if (!validateForm()) return;
+      const order = {
+        paymentMethod,
+        shipmentInfo: formData,
+      };
       const res = await axios.post('/api/orders', order);
       dispatch(clearCart());
-      router.push('/checkout/success')
+      router.push(`/checkout/success?orderId=${res.data._id}`);
     } catch (e) {
       console.log(e);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handlePaymentSuccess = async (response: { reference: string }) => {
-    setLoading(true);
-    const order = {
-      paymentMethod,
-      paymentReference: response.reference,
-      shipmentInfo: formData,
-    };
-
     try {
+      setLoading(true);
+      const order = {
+        paymentMethod,
+        paymentReference: response.reference,
+        shipmentInfo: formData,
+      };
       const res = await axios.post('/api/orders', order);
       dispatch(clearCart());
-      router.push('/checkout/success')
+      router.push(`/checkout/success?orderId=${res.data._id}`);
     } catch (e) {
       console.log(e);
+    } finally {
+      setLoading(false);
     }
   };
 
