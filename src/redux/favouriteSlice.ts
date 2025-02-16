@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { errorHandler } from '@/lib/errorHandler';
-import { IUser } from '@/models/User.model';
 import axios from 'axios';
 import { IProduct } from '@/models/Product.model';
 

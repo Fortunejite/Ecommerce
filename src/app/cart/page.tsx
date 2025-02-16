@@ -2,7 +2,6 @@
 import { useAppDispatch, useAppSelector } from '@/hooks/redux.hook';
 import { calculateTotalAmount, calculateTotalItems } from '@/lib/cartUtils';
 import { formatNumber } from '@/lib/formatNumber';
-import { ICart } from '@/models/Cart.model';
 import { IProduct } from '@/models/Product.model';
 import { toggleCart, updateQuantity } from '@/redux/cartSlice';
 import { Add, DeleteOutline, Remove } from '@mui/icons-material';
@@ -125,7 +124,7 @@ const Cart = () => {
                     >
                       <Stack>
                         <Typography variant={'h6'}>{product.name}</Typography>
-                        <Typography>{product.category}</Typography>
+                        <Typography>Category: {product.category.toString()}</Typography>
                         <Typography
                           variant='body2'
                           color={product.stock ? 'success' : 'error'}

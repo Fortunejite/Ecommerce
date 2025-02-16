@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from '@/hooks/redux.hook';
 import { formatNumber } from '@/lib/formatNumber';
 import { IProduct } from '@/models/Product.model';
 import { selectInCart, toggleCart } from '@/redux/cartSlice';
-import { selectIsFavourite, toggleFavourite } from '@/redux/favouriteSlice';
+import { toggleFavourite } from '@/redux/favouriteSlice';
 import { Delete } from '@mui/icons-material';
 import {
   Stack,
@@ -79,9 +79,6 @@ const PriceSection = ({ product }: { product: IProduct }) => {
 const FavoriteProduct = ({ product }: ProductProps) => {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const isFavourite = useAppSelector((state) =>
-    selectIsFavourite(state, product._id),
-  );
   const inCart = useAppSelector((state) => selectInCart(state, product._id));
   return (
     <Paper

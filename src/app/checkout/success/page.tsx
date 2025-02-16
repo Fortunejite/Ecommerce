@@ -2,11 +2,22 @@
 import { CheckCircleOutline } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import Link from 'next/link';
 
-const Success = () => {
+const SuccessText = () => {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
+
+  return (
+    <Typography>
+      Your order has been recieved and would be attended to shortly. You can
+      track the progress <Link href={`/orders/${orderId}`}>Here</Link>
+    </Typography>
+  );
+};
+
+const Success = () => {
   return (
     <Box
       display={'flex'}
@@ -16,10 +27,16 @@ const Success = () => {
       height={'50vh'}
     >
       <CheckCircleOutline fontSize='large' color='success' />
-      <Typography>
-        Your order has been recieved and would be attended to shortly. You can
-        track the progress <Link href={`/orders/${orderId}`}>Here</Link>
-      </Typography>
+      <Suspense
+        fallback={
+          <Typography>
+            Your order has been recieved and would be attended to shortly. You
+            can track the progress Here
+          </Typography>
+        }
+      >
+        <SuccessText />
+      </Suspense>
     </Box>
   );
 };

@@ -5,7 +5,6 @@ import { useAppDispatch, useAppSelector } from '@/hooks/redux.hook';
 import { clearCart } from '@/redux/cartSlice';
 import { calculateTotalAmount, calculateTotalItems } from '@/lib/cartUtils';
 import { formatNumber } from '@/lib/formatNumber';
-import { IUser } from '@/models/User.model';
 import {
   Box,
   Button,
@@ -24,7 +23,6 @@ import axios from 'axios';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
-import { callback } from 'react-paystack/dist/types';
 
 const PCCheckOutBtn = styled(Button)(({ theme }) => ({
   [theme.breakpoints.down('sm')]: {
@@ -41,7 +39,6 @@ const MobileCheckOutBtn = styled(Button)(({ theme }) => ({
 }));
 
 const Checkout = () => {
-  const [profile, setProfile] = React.useState<IUser | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<Record<string, string>>({});
   const [paymentMethod, setPaymentMethod] = React.useState<'paystack' | 'cash'>(
@@ -66,7 +63,6 @@ const Checkout = () => {
     const getProfile = async () => {
       if (!user) return;
       const res = await axios.get('/api/profile');
-      setProfile(res.data);
       setFormData((prev) => ({ ...prev, ...res.data }));
     };
 
@@ -270,7 +266,7 @@ const Checkout = () => {
             <Divider />
             <Stack marginTop={2} direction='row' justifyContent='space-between'>
               <Typography>
-                Item's total({calculateTotalItems(items)}):
+                Item&apos;s total({calculateTotalItems(items)}):
               </Typography>
               <Typography variant={'h6'}>
                 ₦{formatNumber(calculateTotalAmount(items))}

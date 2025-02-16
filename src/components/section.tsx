@@ -1,4 +1,3 @@
-import { IProduct } from '@/models/Product.model';
 import { Stack, Typography, Grid2, Box, Divider } from '@mui/material';
 import { ReactNode } from 'react';
 

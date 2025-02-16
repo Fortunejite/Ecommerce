@@ -18,9 +18,9 @@ const Proividers = ({
 
   useEffect(() => {
     const defaultMode = localStorage.getItem('mode');
-    defaultMode &&
-      (defaultMode === 'light' || defaultMode === 'dark') &&
+    if (defaultMode && (defaultMode === 'light' || defaultMode === 'dark')) {
       setMode(defaultMode);
+    }
   }, []);
 
   return (

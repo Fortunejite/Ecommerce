@@ -226,7 +226,7 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
   useEffect(() => {
     dispatch(fetchCategories());
     dispatch(fetchTags());
-  }, []);
+  }, [dispatch]);
 
   const handleMenuOpen = (e: MouseEvent<HTMLElement>) => {
     setAnchorEl(e.currentTarget);
