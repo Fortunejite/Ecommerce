@@ -9,12 +9,14 @@ export async function GET(
     const { id } = await params;
     if (!id) {
       return NextResponse.json(
-        { message: 'Order ID is required' },
+        { message: 'Tracking ID is required' },
         { status: 400 },
       );
     }
 
-    const order = await Order.findById(id).populate('user').populate('Product');
+    const order = await Order.findOne({ trackingId: id })
+    .populate('user')
+    .populate('cartItems.product');
     if (!order) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });
     }
@@ -36,19 +38,16 @@ export async function PATCH(
     const { id } = await params;
     if (!id) {
       return NextResponse.json(
-        { message: 'Order ID is required' },
+        { message: 'Tracking ID is required' },
         { status: 400 },
       );
     }
     const body = await request.json();
-    const order = await Order.findByIdAndUpdate(id, body, {
+    const order = await Order.findOneAndUpdate({ trackingId: id }, body, {
       new: true,
     });
     if (!order) {
-      return NextResponse.json(
-        { message: 'Order not found' },
-        { status: 404 },
-      );
+      return NextResponse.json({ message: 'Order not found' }, { status: 404 });
     }
     return NextResponse.json(order);
   } catch (error) {

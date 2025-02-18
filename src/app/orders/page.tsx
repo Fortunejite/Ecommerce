@@ -72,11 +72,9 @@ const OrderElement = ({ order }: { order: IOrder }) => {
               </Typography>
             )}
           </Stack>
-          {quantity && (
             <Typography>
               QTY: <strong>{quantity}</strong>
             </Typography>
-          )}
         </Grid2>
         <Grid2
           size={2}
@@ -203,7 +201,7 @@ const Orders = () => {
     <Stack gap={2} p={{ xs: 1, sm: 4 }}>
       <Breadcrumbs>
         <Link href={'/'}>Home</Link>
-        <Typography>Cart</Typography>
+        <Typography>My Orders</Typography>
       </Breadcrumbs>
       <Box
         sx={{
@@ -218,24 +216,28 @@ const Orders = () => {
             variant={status === 'all' ? 'filled' : 'outlined'}
             onClick={() => filterStatus('all')}
             disabled={loading || status === 'all'}
+            color='primary'
           />
           <Chip
             label='Processing'
             variant={status === 'processing' ? 'filled' : 'outlined'}
             onClick={() => filterStatus('processing')}
             disabled={loading || status === 'processing'}
+            color='primary'
           />
           <Chip
             label='Shipped'
-            variant={status === 'processing' ? 'filled' : 'outlined'}
+            variant={status === 'shipped' ? 'filled' : 'outlined'}
             onClick={() => filterStatus('shipped')}
             disabled={loading || status === 'shipped'}
+            color='primary'
           />
           <Chip
             label='Delivered'
             variant={status === 'delivered' ? 'filled' : 'outlined'}
             onClick={() => filterStatus('delivered')}
             disabled={loading || status === 'delivered'}
+            color='primary'
           />
         </Stack>
       </Box>
