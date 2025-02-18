@@ -16,7 +16,7 @@ const theme = (mode: PaletteMode) =>
         contrastText: mode === 'light' ? '#212121' : '#FFFFFF',
       },
       background: {
-        default: mode === 'light' ? '#FFFFFF' : '#121212', // Neutral Light or Dark
+        default: mode === 'light' ? '#f5f5f5' : '#121212', // Neutral Light or Dark
         paper: mode === 'light' ? '#FFFFFF' : '#1E1E1E', // Card/Modal Background
       },
       text: {

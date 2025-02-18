@@ -256,6 +256,14 @@ const ProductDetails = () => {
                     : 'Out of Stock'}
                 </Typography>
                 <Stack direction='row' gap={1} alignItems='center'>
+                  {product.variation && (
+                    <Typography>Variation: {product.variation}</Typography>
+                  )}
+                  {product.volume && (
+                    <Typography>Volume: {product.volume}</Typography>
+                  )}
+                </Stack>
+                <Stack direction='row' gap={1} alignItems='center'>
                   <Rating
                     precision={0.5}
                     defaultValue={product.rating || 0}

@@ -116,7 +116,7 @@ const Checkout = () => {
       };
       const res = await axios.post('/api/orders', order);
       dispatch(clearCart());
-      router.push(`/checkout/success?orderId=${res.data._id}`);
+      router.push(`/checkout/success?orderId=${res.data.trackingId}`);
     } catch (e) {
       console.log(e);
     } finally {
@@ -134,7 +134,7 @@ const Checkout = () => {
       };
       const res = await axios.post('/api/orders', order);
       dispatch(clearCart());
-      router.push(`/checkout/success?orderId=${res.data._id}`);
+      router.push(`/checkout/success?orderId=${res.data.trackingId}`);
     } catch (e) {
       console.log(e);
     } finally {

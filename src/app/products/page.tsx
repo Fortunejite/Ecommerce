@@ -54,19 +54,15 @@ export default function Products() {
   const changePage = async (e: ChangeEvent<unknown>, value: number) => {
     try {
       setCurrentPage(value);
-      try {
-        setLoading(true);
-        const res = await axios.get(`${URL}&page=${value}`);
-        const { products, totalCount } = res.data;
-        setProducts(products);
-        setCount(totalCount);
-      } catch (e) {
-        console.log(errorHandler(e));
-      } finally {
-        setLoading(false);
-      }
+      setLoading(true);
+      const res = await axios.get(`${URL}&page=${value}`);
+      const { products, totalCount } = res.data;
+      setProducts(products);
+      setCount(totalCount);
     } catch (e) {
       console.log(errorHandler(e));
+    } finally {
+      setLoading(false);
     }
   };
 

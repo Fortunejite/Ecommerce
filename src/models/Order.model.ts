@@ -1,10 +1,18 @@
 import { InferSchemaType, Schema, model, models } from 'mongoose';
 
+const generateTrackingId = () =>
+  Math.floor(100000000 * Math.random() * 9000000000);
+
 const orderSchema = new Schema(
   {
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
+    },
+    trackingId: {
+      type: Number,
+      default: generateTrackingId,
+      unique: true,
     },
     cartItems: [
       {
@@ -33,6 +41,9 @@ const orderSchema = new Schema(
     },
     paymentReference: {
       type: String,
+      default: null,
+      sparse: true,
+      unique: true,
     },
     shipmentInfo: {
       address: {

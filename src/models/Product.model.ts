@@ -4,9 +4,9 @@ const productSchema = new Schema(
   {
     name: {
       type: String,
-      required: [true, "Name is required"],
+      required: [true, 'Name is required'],
     },
-    description: { type: String, required: [true, "Description is required"] },
+    description: { type: String, required: [true, 'Description is required'] },
     tags: [
       {
         type: Schema.Types.ObjectId,
@@ -30,20 +30,23 @@ const productSchema = new Schema(
     },
     price: {
       type: Number,
-      required: [true, "Price is required"],
+      required: [true, 'Price is required'],
     },
-    colors: [
-      {
-        type: String,
-      },
-    ],
+    volume: {
+      type: String,
+    },
+
+    variation: {
+      type: String,
+    },
+
     discount: {
       type: Number,
       default: 0,
     },
     mainPic: {
       type: String,
-      required: [true, "mainPic is required"],
+      required: [true, 'mainPic is required'],
     },
     otherImages: [
       {

@@ -14,13 +14,27 @@ export async function GET(request: NextRequest) {
     // filter
     const status = request.nextUrl.searchParams.get('status');
 
+    const session = await auth();
+    if (!session)
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    const { user } = session;
+    const { isAdmin } = user;
+
     const skip = (page - 1) * limit;
     const query = {
+      ...(!isAdmin && { user: user._id }),
       ...(status && { status }),
     };
 
-    const orders = await Order.find(query).skip(skip).limit(limit);
-    return NextResponse.json(orders);
+    const [orders, totalCount] = await Promise.all([
+      Order.find(query)
+        .skip(skip)
+        .limit(limit)
+        .populate('user')
+        .populate('cartItems.product'),
+      Order.countDocuments(query).exec(),
+    ]);
+    return NextResponse.json({ orders, totalCount });
   } catch (e) {
     console.log(e);
     return NextResponse.json({}, { status: 500 });
@@ -57,7 +71,7 @@ export async function POST(request: NextRequest) {
     await Cart.findOneAndUpdate({ user: user._id }, { $set: { items: [] } });
     return NextResponse.json(newOrder, { status: 201 });
   } catch (e) {
-    console.log(e)
+    console.log(e);
     return NextResponse.json(
       { error: handleMongooseError(e as Error) },
       { status: 500 },
