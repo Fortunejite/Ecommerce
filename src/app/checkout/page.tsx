@@ -22,13 +22,14 @@ import {
 import axios from 'axios';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import React from 'react';
+import React, { useEffect, useMemo, useState, ChangeEvent } from 'react';
 
 const PCCheckOutBtn = styled(Button)(({ theme }) => ({
   [theme.breakpoints.down('sm')]: {
     display: 'none',
   },
 }));
+
 const MobileCheckOutBtn = styled(Button)(({ theme }) => ({
   display: 'none',
   [theme.breakpoints.down('sm')]: {
@@ -39,37 +40,49 @@ const MobileCheckOutBtn = styled(Button)(({ theme }) => ({
 }));
 
 const Checkout = () => {
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<Record<string, string>>({});
-  const [paymentMethod, setPaymentMethod] = React.useState<'paystack' | 'cash'>(
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Record<string, string>>({});
+  const [paymentMethod, setPaymentMethod] = useState<'paystack' | 'cash'>(
     'paystack',
   );
-  const [formData, setFormData] = React.useState({
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     address: '',
     city: '',
     phoneNumber: '',
   });
+
   const { items } = useAppSelector((state) => state.cart);
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const session = useSession();
-  if (!session) router.push('/login?callback=/checkout');
+  const { data: session, status } = useSession();
 
-  const user = session.data?.user;
+  // Redirect to login if unauthenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login?callback=/checkout');
+    }
+  }, [status, router]);
 
-  React.useEffect(() => {
+  const user = session?.user;
+
+  // Fetch user profile to pre-fill form data
+  useEffect(() => {
     const getProfile = async () => {
       if (!user) return;
-      const res = await axios.get('/api/profile');
-      setFormData((prev) => ({ ...prev, ...res.data }));
+      try {
+        const res = await axios.get('/api/profile');
+        setFormData((prev) => ({ ...prev, ...res.data }));
+      } catch (err) {
+        console.error('Failed to fetch profile:', err);
+      }
     };
 
     getProfile();
   }, [user]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setError((prev) => ({ ...prev, [name]: '' }));
@@ -81,21 +94,17 @@ const Checkout = () => {
     if (!formData.name.trim()) {
       errors.name = 'Name is required';
     }
-
     if (!formData.email.trim()) {
       errors.email = 'Email address is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.email = 'Invalid email address';
     }
-
     if (!formData.address.trim()) {
       errors.address = 'Street address is required';
     }
-
     if (!formData.city.trim()) {
       errors.city = 'Town/City is required';
     }
-
     if (!formData.phoneNumber.trim()) {
       errors.phoneNumber = 'Phone number is required';
     } else if (!/^\+?[0-9]{7,15}$/.test(formData.phoneNumber)) {
@@ -103,13 +112,16 @@ const Checkout = () => {
     }
 
     setError(errors);
-    return Object.entries(errors).length === 0;
+    return Object.keys(errors).length === 0;
   };
 
+  const totalAmount = useMemo(() => calculateTotalAmount(items), [items]);
+  const totalItems = useMemo(() => calculateTotalItems(items), [items]);
+
   const placeOrder = async () => {
+    if (!validateForm()) return;
     try {
       setLoading(true);
-      if (!validateForm()) return;
       const order = {
         paymentMethod,
         shipmentInfo: formData,
@@ -118,7 +130,7 @@ const Checkout = () => {
       dispatch(clearCart());
       router.push(`/checkout/success?orderId=${res.data.trackingId}`);
     } catch (e) {
-      console.log(e);
+      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -136,7 +148,7 @@ const Checkout = () => {
       dispatch(clearCart());
       router.push(`/checkout/success?orderId=${res.data.trackingId}`);
     } catch (e) {
-      console.log(e);
+      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -150,13 +162,11 @@ const Checkout = () => {
         flexDirection={{ xs: 'column-reverse', sm: 'row' }}
         sx={{ position: 'relative' }}
       >
+        {/* Billing Details Form */}
         <Grid2
           size={{ xs: 12, sm: 8 }}
           gap={2}
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-          }}
+          sx={{ display: 'flex', flexDirection: 'column' }}
         >
           <Typography variant='h6'>Billing Details</Typography>
           <TextField
@@ -209,8 +219,9 @@ const Checkout = () => {
             fullWidth
             label='Phone Number'
           />
+          {/* Mobile Payment Method */}
           <Box display={{ xs: 'block', sm: 'none' }}>
-            <Typography variant={'h6'}>Payment Method</Typography>
+            <Typography variant='h6'>Payment Method</Typography>
             <FormControl>
               <RadioGroup
                 value={paymentMethod}
@@ -233,7 +244,7 @@ const Checkout = () => {
           </Box>
           {paymentMethod === 'cash' ? (
             <MobileCheckOutBtn
-              size={'large'}
+              size='large'
               onClick={placeOrder}
               variant='contained'
               disabled={loading}
@@ -248,7 +259,7 @@ const Checkout = () => {
             >
               <PaystackPayment
                 email={formData.email}
-                amount={calculateTotalAmount(items)}
+                amount={totalAmount}
                 onSuccess={handlePaymentSuccess}
                 validateForm={validateForm}
                 loading={loading}
@@ -256,36 +267,34 @@ const Checkout = () => {
             </Box>
           )}
         </Grid2>
+
+        {/* Order Summary */}
         <Grid2
           size={{ xs: 12, sm: 4 }}
-          position={{ xs: 'static', sm: 'sticky' }}
-          sx={{ top: 32 }}
+          sx={{
+            position: { xs: 'static', sm: 'sticky' },
+            top: 32,
+          }}
         >
           <Box>
-            <Typography variant={'h6'}>Order Summary</Typography>
+            <Typography variant='h6'>Order Summary</Typography>
             <Divider />
-            <Stack marginTop={2} direction='row' justifyContent='space-between'>
-              <Typography>
-                Item&apos;s total({calculateTotalItems(items)}):
-              </Typography>
-              <Typography variant={'h6'}>
-                ₦{formatNumber(calculateTotalAmount(items))}
-              </Typography>
+            <Stack mt={2} direction='row' justifyContent='space-between'>
+              <Typography>Item&apos;s total ({totalItems}):</Typography>
+              <Typography variant='h6'>₦{formatNumber(totalAmount)}</Typography>
             </Stack>
-            <Stack marginTop={2} direction='row' justifyContent='space-between'>
+            <Stack mt={2} direction='row' justifyContent='space-between'>
               <Typography>Delivery fee:</Typography>
-              <Typography variant={'h6'}>Free</Typography>
+              <Typography variant='h6'>Free</Typography>
             </Stack>
-            <Stack marginTop={2} direction='row' justifyContent='space-between'>
-              <Typography variant={'h6'}>Total:</Typography>
-              <Typography variant={'h6'}>
-                ₦{formatNumber(calculateTotalAmount(items))}
-              </Typography>
+            <Stack mt={2} direction='row' justifyContent='space-between'>
+              <Typography variant='h6'>Total:</Typography>
+              <Typography variant='h6'>₦{formatNumber(totalAmount)}</Typography>
             </Stack>
-            <Box marginTop={2} marginBottom={2}>
+            <Box mt={2} mb={2}>
               <Divider />
               <Box display={{ xs: 'none', sm: 'block' }}>
-                <Typography variant={'h6'}>Payment Method</Typography>
+                <Typography variant='h6'>Payment Method</Typography>
                 <FormControl>
                   <RadioGroup
                     value={paymentMethod}
@@ -309,7 +318,7 @@ const Checkout = () => {
             </Box>
             {paymentMethod === 'cash' ? (
               <PCCheckOutBtn
-                size={'large'}
+                size='large'
                 onClick={placeOrder}
                 variant='contained'
                 fullWidth
@@ -321,7 +330,7 @@ const Checkout = () => {
               <Box display={{ xs: 'none', sm: 'block' }}>
                 <PaystackPayment
                   email={formData.email}
-                  amount={calculateTotalAmount(items)}
+                  amount={totalAmount}
                   validateForm={validateForm}
                   onSuccess={handlePaymentSuccess}
                   loading={loading}
@@ -334,4 +343,5 @@ const Checkout = () => {
     </Stack>
   );
 };
+
 export default Checkout;

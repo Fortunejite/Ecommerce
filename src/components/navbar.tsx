@@ -37,11 +37,12 @@ import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Dispatch,
-  MouseEvent,
-  SetStateAction,
+  useCallback,
   useEffect,
   useState,
+  Dispatch,
+  SetStateAction,
+  MouseEvent,
 } from 'react';
 
 import { useAppDispatch, useAppSelector } from '@/hooks/redux.hook';
@@ -73,7 +74,7 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   backgroundColor: theme.palette.background.default,
   color: theme.palette.text.primary,
   [theme.breakpoints.down('sm')]: {
-    padding: '0',
+    padding: 0,
   },
 }));
 
@@ -152,50 +153,51 @@ const ModeSwitch = styled(Switch)(({ theme }) => ({
   },
 }));
 
-const Drawer = ({ open, setOpen, mode, setMode }: DrawerProps) => (
-  <SwipeableDrawer
-    anchor='left'
-    open={open}
-    onOpen={() => setOpen(true)}
-    onClose={() => setOpen(false)}
-    sx={{ display: { xs: 'block', sm: 'none' } }}
-  >
-    <Box width={250} onClick={() => setOpen(false)}>
-      <List>
-        {navigations.map(({ name, icon, url }) => (
-          <ListItem key={url} disablePadding>
-            <Link href={url}>
-              <ListItemButton>
+const Drawer = ({ open, setOpen, mode, setMode }: DrawerProps) => {
+  // Toggle dark/light mode
+  const handleModeToggle = useCallback(() => {
+    setMode((prev) => {
+      const nextMode = prev === 'light' ? 'dark' : 'light';
+      localStorage.setItem('mode', nextMode);
+      return nextMode;
+    });
+  }, [setMode]);
+
+  return (
+    <SwipeableDrawer
+      anchor="left"
+      open={open}
+      onOpen={() => setOpen(true)}
+      onClose={() => setOpen(false)}
+      sx={{ display: { xs: 'block', sm: 'none' } }}
+    >
+      <Box width={250} onClick={() => setOpen(false)}>
+        <List>
+          {navigations.map(({ name, icon, url }) => (
+            <ListItem key={url} disablePadding>
+              <ListItemButton component={Link} href={url}>
                 <ListItemIcon>{icon}</ListItemIcon>
                 <ListItemText primary={name} />
               </ListItemButton>
-            </Link>
+            </ListItem>
+          ))}
+          <ListItem>
+            <FormControlLabel
+              control={
+                <ModeSwitch
+                  sx={{ m: 1 }}
+                  checked={mode === 'dark'}
+                  onChange={handleModeToggle}
+                />
+              }
+              label={`${mode} mode`}
+            />
           </ListItem>
-        ))}
-        <ListItem>
-          <FormControlLabel
-            control={
-              <ModeSwitch
-                sx={{ m: 1 }}
-                checked={mode === 'dark'}
-                onChange={() => {
-                  setMode((prev) => {
-                    localStorage.setItem(
-                      'mode',
-                      prev === 'light' ? 'dark' : 'light',
-                    );
-                    return prev === 'light' ? 'dark' : 'light';
-                  });
-                }}
-              />
-            }
-            label={`${mode} mode`}
-          />
-        </ListItem>
-      </List>
-    </Box>
-  </SwipeableDrawer>
-);
+        </List>
+      </Box>
+    </SwipeableDrawer>
+  );
+};
 
 const Navbar = ({ mode, setMode }: NavbarProps) => {
   const session = useSession();
@@ -203,89 +205,90 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
   const dispatch = useAppDispatch();
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const { status: favouriteStatus, products: favorites } = useAppSelector(
-    (state) => state.favourite,
-  );
-  const { status: cartStatus, items: cart } = useAppSelector(
-    (state) => state.cart,
-  );
-
   const menuOpen = Boolean(anchorEl);
-
+  const { status: favStatus, products: favorites } = useAppSelector(
+    (state) => state.favourite
+  );
+  const { status: cartStatus, items: cart } = useAppSelector((state) => state.cart);
   const user = session.data?.user;
 
+  // Memoized toggle for mode (used in both desktop and drawer)
+  const toggleMode = useCallback(() => {
+    setMode((prev) => {
+      const nextMode = prev === 'light' ? 'dark' : 'light';
+      localStorage.setItem('mode', nextMode);
+      return nextMode;
+    });
+  }, [setMode]);
+
+  // Fetch user favourites, cart, categories, and tags when available
   useEffect(() => {
-    if (user && favouriteStatus === 'idle') {
+    if (user && favStatus === 'idle') {
       dispatch(fetchFavourite());
     }
     if (user && cartStatus === 'idle') {
       dispatch(fetchCart());
     }
-  }, [cartStatus, dispatch, favouriteStatus, user]);
+  }, [dispatch, user, favStatus, cartStatus]);
 
   useEffect(() => {
     dispatch(fetchCategories());
     dispatch(fetchTags());
   }, [dispatch]);
 
-  const handleMenuOpen = (e: MouseEvent<HTMLElement>) => {
+  const handleMenuOpen = useCallback((e: MouseEvent<HTMLElement>) => {
     setAnchorEl(e.currentTarget);
-  };
-  const handleMenuClose = () => {
+  }, []);
+
+  const handleMenuClose = useCallback(() => {
     setAnchorEl(null);
-  };
+  }, []);
 
   return (
-    <AppBar position='sticky' elevation={1}>
+    <AppBar position="sticky" elevation={1}>
       <StyledToolbar>
-        <Stack direction='row' alignItems={'center'}>
+        <Stack direction="row" alignItems="center">
           <IconButton
             onClick={() => setOpen(true)}
             sx={{ display: { xs: 'block', sm: 'none' } }}
+            aria-label="Open navigation menu"
           >
             <MenuIcon />
           </IconButton>
           <Drawer open={open} setOpen={setOpen} mode={mode} setMode={setMode} />
-          <Typography variant='h6'>Exclusive</Typography>
+          <Typography variant="h6">Exclusive</Typography>
         </Stack>
         <Links>
           {navigations.map(({ name, url }) => (
-            <Link key={url} href={url}>
+            <Link key={url} href={url} passHref>
               {url === pathname ? (
-                <ActiveLink variant='body1'>{name}</ActiveLink>
+                <ActiveLink variant="body1">{name}</ActiveLink>
               ) : (
-                <Typography variant='body1' component={'h6'}>
+                <Typography variant="body1" component="h6">
                   {name}
                 </Typography>
               )}
             </Link>
           ))}
-          <ModeSwitch
-            checked={mode === 'dark'}
-            onChange={() => {
-              setMode((prev) => {
-                localStorage.setItem(
-                  'mode',
-                  prev === 'light' ? 'dark' : 'light',
-                );
-                return prev === 'light' ? 'dark' : 'light';
-              });
-            }}
-          />
+          <ModeSwitch checked={mode === 'dark'} onChange={toggleMode} />
         </Links>
         <Actions>
-          <Link href={'/favourite'}>
-            <Badge badgeContent={favorites.length} color='primary'>
+          <Link href="/favourite" passHref>
+            <Badge badgeContent={favorites.length} color="primary">
               <FavoriteBorderOutlined />
             </Badge>
           </Link>
-          <Link href={'/cart'}>
-            <Badge badgeContent={cart.length} color='primary'>
+          <Link href="/cart" passHref>
+            <Badge badgeContent={cart.length} color="primary">
               <ShoppingCartOutlined />
             </Badge>
           </Link>
           {user && (
-            <Avatar onClick={handleMenuOpen} sx={{ width: 30, height: 30 }} />
+            <Avatar
+              onClick={handleMenuOpen}
+              sx={{ width: 30, height: 30, cursor: 'pointer' }}
+              alt="User avatar"
+            />
           )}
           <Menu
             anchorEl={anchorEl}
@@ -294,15 +297,11 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
             anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
             transformOrigin={{ vertical: 'top', horizontal: 'left' }}
           >
-            <MenuItem onClick={handleMenuClose}>
-              <Link href={'/profile'}>
-                <Person fontSize='small' /> Manage My Account
-              </Link>
+            <MenuItem onClick={handleMenuClose} component={Link} href="/profile">
+              <Person fontSize="small" />&nbsp;Manage My Account
             </MenuItem>
-            <MenuItem onClick={handleMenuClose}>
-              <Link href={'/orders'}>
-                <ShoppingBag fontSize='small' /> My Order
-              </Link>
+            <MenuItem onClick={handleMenuClose} component={Link} href="/orders">
+              <ShoppingBag fontSize="small" />&nbsp;My Order
             </MenuItem>
             <MenuItem
               onClick={() => {
@@ -310,7 +309,7 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
                 handleMenuClose();
               }}
             >
-              <Logout fontSize='small' /> Logout
+              <Logout fontSize="small" />&nbsp;Logout
             </MenuItem>
           </Menu>
         </Actions>

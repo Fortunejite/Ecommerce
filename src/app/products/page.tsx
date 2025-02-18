@@ -8,7 +8,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import FilterDrawer from './filterDrawer';
 import { IProduct } from '@/models/Product.model';
 import Product from '@/components/product';
@@ -28,34 +28,17 @@ export default function Products() {
   const LIMIT = 8;
   const pageCount = Math.ceil(count / LIMIT) || 1;
 
-  const URL = `/api/products?limit=${LIMIT}&${queryString}`;
-
+  // Reset current page whenever queryString changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [count]);
+  }, [queryString]);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await axios.get(URL);
-        const { products, totalCount } = res.data;
-        setProducts(products);
-        setCount(totalCount);
-      } catch (e) {
-        console.log(errorHandler(e));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
-  const changePage = async (e: ChangeEvent<unknown>, value: number) => {
+  // Fetch products based on current query and page
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
     try {
-      setCurrentPage(value);
-      setLoading(true);
-      const res = await axios.get(`${URL}&page=${value}`);
+      const url = `/api/products?limit=${LIMIT}&${queryString}&page=${currentPage}`;
+      const res = await axios.get(url);
       const { products, totalCount } = res.data;
       setProducts(products);
       setCount(totalCount);
@@ -64,10 +47,19 @@ export default function Products() {
     } finally {
       setLoading(false);
     }
+  }, [queryString, currentPage]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  // Handle page change
+  const changePage = (e: ChangeEvent<unknown>, value: number) => {
+    setCurrentPage(value);
   };
 
   return (
-    <Stack p={{ xs: 1, sm: 4 }}>
+    <Stack p={{ xs: 1, sm: 4 }} spacing={2}>
       <Box
         sx={{
           display: 'flex',
@@ -75,15 +67,16 @@ export default function Products() {
           alignItems: 'center',
         }}
       >
-        <Typography variant='h6'>Results({count})</Typography>
+        <Typography variant="h6">Results ({count})</Typography>
         <Button
-          variant='contained'
+          variant="contained"
           endIcon={<Tune />}
           onClick={() => setFilterOpen(true)}
         >
           Filter
         </Button>
       </Box>
+
       <FilterDrawer
         open={filterOpen}
         setOpen={setFilterOpen}
@@ -94,37 +87,32 @@ export default function Products() {
       />
 
       {loading ? (
-        <Grid2 container spacing={2} marginBottom={2} marginTop={2}>
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((_, i) => (
+        <Grid2 container spacing={2} my={2}>
+          {Array.from({ length: LIMIT }).map((_, i) => (
             <Grid2 key={i} size={{ xs: 6, sm: 3 }}>
               <ProductSkeleton />
             </Grid2>
           ))}
         </Grid2>
       ) : products.length ? (
-        <Grid2 container spacing={2} marginBottom={2} marginTop={2}>
-          {products.map((product, i) => (
-            <Grid2 key={i} size={{ xs: 6, sm: 3 }}>
-              <Product key={product._id.toString()} product={product} />
+        <Grid2 container spacing={2} my={2}>
+          {products.map((product) => (
+            <Grid2 key={product._id.toString()} size={{ xs: 6, sm: 3 }}>
+              <Product product={product} />
             </Grid2>
           ))}
         </Grid2>
       ) : (
-        <Typography variant='h6' align='center'>
-          No result Found
+        <Typography variant="h6" align="center">
+          No results found
         </Typography>
       )}
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
+
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <Pagination
           count={pageCount}
           page={currentPage}
-          shape='rounded'
+          shape="rounded"
           onChange={changePage}
         />
       </Box>

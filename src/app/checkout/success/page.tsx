@@ -1,18 +1,24 @@
 'use client';
+
 import { CheckCircleOutline } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
 import Link from 'next/link';
+import React from 'react';
 
 const SuccessText = () => {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
 
   return (
-    <Typography>
-      Your order has been recieved and would be attended to shortly. You can
-      track the progress <Link href={`/orders/${orderId}`}>Here</Link>
+    <Typography variant="body1" align="center" mt={2}>
+      Your order has been received and will be attended to shortly. You can track
+      its progress{' '}
+      {orderId && (
+        <Link href={`/orders/${orderId}`} style={{ textDecoration: 'underline' }}>
+          here
+        </Link>
+      )}.
     </Typography>
   );
 };
@@ -20,23 +26,16 @@ const SuccessText = () => {
 const Success = () => {
   return (
     <Box
-      display={'flex'}
-      alignItems={'center'}
-      justifyContent='center'
-      flexDirection={'column'}
-      height={'50vh'}
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      flexDirection="column"
+      height="50vh"
+      textAlign="center"
+      px={2}
     >
-      <CheckCircleOutline fontSize='large' color='success' />
-      <Suspense
-        fallback={
-          <Typography>
-            Your order has been recieved and would be attended to shortly. You
-            can track the progress Here
-          </Typography>
-        }
-      >
-        <SuccessText />
-      </Suspense>
+      <CheckCircleOutline fontSize="large" color="success" />
+      <SuccessText />
     </Box>
   );
 };

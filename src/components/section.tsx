@@ -1,3 +1,5 @@
+'use client';
+
 import { Stack, Typography, Grid2, Box, Divider } from '@mui/material';
 import { ReactNode } from 'react';
 
@@ -6,30 +8,31 @@ interface SectionProps {
   title: string;
   subtitle: string;
 }
+
 const Section = ({ children, title, subtitle }: SectionProps) => {
   return (
-    <>
+    <Box component="section" my={4}>
       <Stack spacing={2}>
-        <Stack direction={'row'} spacing={1} alignItems={'center'}>
+        <Stack direction="row" spacing={1} alignItems="center">
           <Box
             sx={{
-              height: '32px',
-              width: '16px',
+              height: 32,
+              width: 16,
               backgroundColor: 'primary.main',
-              borderRadius: '4px',
+              borderRadius: 1,
             }}
-          ></Box>
-          <Typography variant='body2' color='primary'>
+          />
+          <Typography variant="body2" color="primary">
             {subtitle}
           </Typography>
         </Stack>
-        <Typography variant='h6'>{title}</Typography>
+        <Typography variant="h6">{title}</Typography>
         <Grid2 container spacing={2}>
           {children}
         </Grid2>
       </Stack>
-      <Divider variant={'fullWidth'} sx={{ margin: '32px 0' }} />
-    </>
+      <Divider sx={{ my: 4 }} />
+    </Box>
   );
 };
 

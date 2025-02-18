@@ -1,3 +1,5 @@
+'use client';
+
 import { useAppSelector } from '@/hooks/redux.hook';
 import { errorHandler } from '@/lib/errorHandler';
 import { ICategory } from '@/models/Category.model';
@@ -56,26 +58,20 @@ const FilterDrawer = ({
   const LIMIT = 8;
 
   const toggleTag = (id: ITag['_id']) => {
-    if (filters.tags.includes(id))
-      return setFilters((prev) => ({
-        ...prev,
-        tags: prev.tags.filter((tag) => tag !== id),
-      }));
-    return setFilters((prev) => ({
+    setFilters((prev) => ({
       ...prev,
-      tags: [...prev.tags, id],
+      tags: prev.tags.includes(id)
+        ? prev.tags.filter((tag) => tag !== id)
+        : [...prev.tags, id],
     }));
   };
 
   const toggleCategory = (id: ICategory['_id']) => {
-    if (filters.categories.includes(id))
-      return setFilters((prev) => ({
-        ...prev,
-        categories: prev.categories.filter((category) => category !== id),
-      }));
-    return setFilters((prev) => ({
+    setFilters((prev) => ({
       ...prev,
-      categories: [...prev.categories, id],
+      categories: prev.categories.includes(id)
+        ? prev.categories.filter((cat) => cat !== id)
+        : [...prev.categories, id],
     }));
   };
 
@@ -84,11 +80,8 @@ const FilterDrawer = ({
     setOpen(false);
 
     if (filters.ratings) params.append('ratings', filters.ratings.toString());
-    if (filters.minPrice)
-      params.append('minPrice', filters.minPrice.toString());
-    if (filters.maxPrice)
-      params.append('maxPrice', filters.maxPrice.toString());
-
+    if (filters.minPrice) params.append('minPrice', filters.minPrice.toString());
+    if (filters.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
     if (filters.categories.length)
       params.append('categories', filters.categories.join(','));
     if (filters.tags.length) params.append('tags', filters.tags.join(','));
@@ -134,7 +127,7 @@ const FilterDrawer = ({
 
   return (
     <SwipeableDrawer
-      anchor='right'
+      anchor="right"
       open={open}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
@@ -144,11 +137,11 @@ const FilterDrawer = ({
           <Close />
         </IconButton>
         <Section>
-          <Typography variant='h6'>Categories</Typography>
-          <Stack direction={'row'} gap={1} flexWrap={'wrap'}>
-            {categories.map((category, i) => (
+          <Typography variant="h6">Categories</Typography>
+          <Stack direction="row" gap={1} flexWrap="wrap">
+            {categories.map((category) => (
               <Chip
-                key={i}
+                key={category._id.toString()}
                 variant={
                   filters.categories.includes(category._id)
                     ? 'filled'
@@ -161,11 +154,11 @@ const FilterDrawer = ({
           </Stack>
         </Section>
         <Section>
-          <Typography variant='h6'>Tags</Typography>
-          <Stack direction={'row'} gap={1} flexWrap={'wrap'}>
-            {tags.map((tag, i) => (
+          <Typography variant="h6">Tags</Typography>
+          <Stack direction="row" gap={1} flexWrap="wrap">
+            {tags.map((tag) => (
               <Chip
-                key={i}
+                key={tag._id.toString()}
                 variant={filters.tags.includes(tag._id) ? 'filled' : 'outlined'}
                 onClick={() => toggleTag(tag._id)}
                 label={tag.name}
@@ -174,37 +167,35 @@ const FilterDrawer = ({
           </Stack>
         </Section>
         <Section>
-          <Typography variant='h6'>Ratings</Typography>
+          <Typography variant="h6">Ratings</Typography>
           <Rating
             precision={0.5}
             value={filters.ratings}
             onChange={(e) =>
               setFilters((prev) => ({
                 ...prev,
-                ratings: parseInt((e.target as HTMLInputElement).value),
+                ratings: Number((e.target as HTMLInputElement).value) || 0,
               }))
             }
           />
         </Section>
         <Section>
-          <Typography variant='h6'>Price</Typography>
-          <Stack direction='row' gap={1}>
+          <Typography variant="h6">Price</Typography>
+          <Stack direction="row" gap={1}>
             <TextField
               value={filters.minPrice}
               onChange={(e) =>
                 setFilters((prev) => ({
                   ...prev,
-                  minPrice: parseInt(e.target.value),
+                  minPrice: Number(e.target.value) || 0,
                 }))
               }
-              label='Min Price'
-              type='number'
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position='start'>$</InputAdornment>
-                  ),
-                },
+              label="Min Price"
+              type="number"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">$</InputAdornment>
+                ),
               }}
             />
             <TextField
@@ -212,17 +203,15 @@ const FilterDrawer = ({
               onChange={(e) =>
                 setFilters((prev) => ({
                   ...prev,
-                  maxPrice: parseInt(e.target.value),
+                  maxPrice: Number(e.target.value) || 0,
                 }))
               }
-              label='Max Price'
-              type='number'
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position='start'>$</InputAdornment>
-                  ),
-                },
+              label="Max Price"
+              type="number"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">$</InputAdornment>
+                ),
               }}
             />
           </Stack>
@@ -230,7 +219,7 @@ const FilterDrawer = ({
         <Box>
           <Button
             sx={{ width: '50%' }}
-            variant='contained'
+            variant="contained"
             onClick={applyFilters}
           >
             Apply

@@ -24,7 +24,7 @@ export default function Home() {
         const { products } = res.data;
         setProducts(products);
       } catch (e) {
-        console.log(errorHandler(e));
+        console.error(errorHandler(e));
       } finally {
         setLoading(false);
       }
@@ -34,29 +34,33 @@ export default function Home() {
   }, []);
 
   return (
-    <Stack p={{ xs: 1, sm: 4 }}>
-      <Section title='Browse By Category' subtitle='Categories'>
-        {categories.map(({ _id, name }) => (
-          <Stack key={_id.toString()}>
-            <Typography variant='h6'>{name}</Typography>
-          </Stack>
-        ))}
+    <Stack p={{ xs: 1, sm: 4 }} spacing={4}>
+      <Section title="Browse By Category" subtitle="Categories">
+        <Stack direction="row" spacing={2} flexWrap="wrap">
+          {categories.map(({ _id, name }) => (
+            <Typography key={_id.toString()} variant="h6">
+              {name}
+            </Typography>
+          ))}
+        </Stack>
       </Section>
-      <Section title='Explore our products' subtitle='Our Products'>
-        {loading
-          ? [1, 2, 3, 4].map((_, i) => (
-              <Grid2 key={i} size={{ xs: 6, sm: 3 }}>
-                <ProductSkeleton />
-              </Grid2>
-            ))
-          : products.map((product, i) => (
-              <Grid2 key={i} size={{ xs: 6, sm: 3 }}>
-                <Product key={product._id.toString()} product={product} />
-              </Grid2>
-            ))}
+      <Section title="Explore our products" subtitle="Our Products">
+        <Grid2 container spacing={2} my={2}>
+          {loading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <Grid2 key={i} size={{ xs: 6, sm: 3 }}>
+                  <ProductSkeleton />
+                </Grid2>
+              ))
+            : products.map((product) => (
+                <Grid2 key={product._id.toString()} size={{ xs: 6, sm: 3 }}>
+                  <Product product={product} />
+                </Grid2>
+              ))}
+        </Grid2>
         <Button
-          sx={{ margin: '0 auto' }}
-          variant='contained'
+          sx={{ display: 'block', mx: 'auto' }}
+          variant="contained"
           onClick={() => router.push('/products')}
         >
           View All Products

@@ -21,7 +21,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
-const ImageContainter = styled(Box)(({ theme }) => ({
+const ImageContainer = styled(Box)(({ theme }) => ({
   position: 'relative',
   width: '100px',
   height: '100px',
@@ -48,6 +48,7 @@ const PCCheckOutBtn = styled(Button)(({ theme }) => ({
     display: 'none',
   },
 }));
+
 const MobileCheckOutBtn = styled(Button)(({ theme }) => ({
   display: 'none',
   [theme.breakpoints.down('sm')]: {
@@ -62,10 +63,13 @@ const Cart = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
+  const totalItems = calculateTotalItems(items);
+  const totalAmount = calculateTotalAmount(items);
+
   return (
     <Stack p={{ xs: 1, sm: 4 }}>
       <Breadcrumbs>
-        <Link href={'/'}>Home</Link>
+        <Link href='/'>Home</Link>
         <Typography>Cart</Typography>
       </Breadcrumbs>
 
@@ -76,55 +80,57 @@ const Cart = () => {
           flexDirection={{ xs: 'column-reverse', sm: 'row' }}
           sx={{ position: 'relative' }}
         >
+          {/* Cart Items List */}
           <Grid2 size={{ xs: 12, sm: 8 }}>
-            <Typography variant={'h6'}>
-              Cart ({calculateTotalItems(items)})
-            </Typography>
-            <Divider />
-            {items.map((item, i) => {
+            <Typography variant='h6'>Cart ({totalItems})</Typography>
+            <Divider sx={{ my: 1 }} />
+            {items.map((item) => {
               const product = item.product as IProduct;
-              const discountAmount =
-                product?.price - (product?.discount / 100) * product?.price;
+              const discountAmount = product.discount
+                ? product.price - (product.discount / 100) * product.price
+                : product.price;
 
               const addQuantity = () => {
                 dispatch(
                   updateQuantity({
                     productId: product._id,
-                    quantity: (item.quantity + 1) as number,
+                    quantity: item.quantity + 1,
                   }),
                 );
               };
+
               const subtractQuantity = () => {
                 dispatch(
                   updateQuantity({
                     productId: product._id,
-                    quantity: (item.quantity - 1) as number,
+                    quantity: item.quantity - 1,
                   }),
                 );
               };
+
               return (
-                <Box key={i} sx={{ margin: '16px 0' }}>
-                  <Stack direction={'row'} gap={2} marginBottom={1}>
-                    <ImageContainter>
+                <Box key={product._id.toString()} sx={{ my: 2 }}>
+                  <Stack direction='row' gap={2} mb={1}>
+                    <ImageContainer>
                       <Image
                         src={product.mainPic}
                         alt={product.name}
                         fill
                         objectFit='contain'
-                        style={{
-                          padding: '8px',
-                        }}
+                        style={{ padding: '8px' }}
                       />
-                    </ImageContainter>
+                    </ImageContainer>
                     <Stack
                       direction={{ xs: 'column', sm: 'row' }}
                       gap={1}
                       justifyContent='space-between'
                       flex={1}
                     >
-                      <Stack>
-                        <Typography variant={'h6'}>{product.name}</Typography>
-                        <Typography>Category: {product.category.toString()}</Typography>
+                      <Stack spacing={0.5}>
+                        <Typography variant='h6'>{product.name}</Typography>
+                        <Typography variant='body2'>
+                          Category: {product.category.toString()}
+                        </Typography>
                         <Typography
                           variant='body2'
                           color={product.stock ? 'success' : 'error'}
@@ -134,17 +140,17 @@ const Cart = () => {
                             : 'Out of Stock'}
                         </Typography>
                       </Stack>
-                      <Stack>
+                      <Stack justifyContent='center'>
                         {product.discount ? (
                           <Stack
                             spacing={1}
                             direction={{ xs: 'row', sm: 'column' }}
-                            alignItems={'center'}
+                            alignItems='center'
                           >
                             <Typography variant='h6'>
                               ₦{formatNumber(discountAmount)}
                             </Typography>
-                            <Stack direction='row' gap={1}>
+                            <Stack direction='row' gap={1} alignItems='center'>
                               <Typography
                                 variant='body1'
                                 sx={{ textDecoration: 'line-through' }}
@@ -154,7 +160,7 @@ const Cart = () => {
                               <Typography
                                 variant='body2'
                                 color='primary'
-                                bgcolor={'secondary.main'}
+                                bgcolor='secondary.main'
                                 p={0.5}
                                 borderRadius={1}
                               >
@@ -170,7 +176,11 @@ const Cart = () => {
                       </Stack>
                     </Stack>
                   </Stack>
-                  <Stack direction={'row'} justifyContent='space-between'>
+                  <Stack
+                    direction='row'
+                    justifyContent='space-between'
+                    alignItems='center'
+                  >
                     <Button
                       onClick={() => dispatch(toggleCart(product._id))}
                       disabled={status === 'loading'}
@@ -178,16 +188,14 @@ const Cart = () => {
                     >
                       Remove
                     </Button>
-                    <Stack direction='row'>
+                    <Stack direction='row' alignItems='center'>
                       <QuantityChangeButton
                         disabled={item.quantity <= 1 || status === 'loading'}
                         onClick={subtractQuantity}
                       >
                         <Remove />
                       </QuantityChangeButton>
-
                       <Box
-                        flex={1}
                         sx={{
                           display: 'flex',
                           alignItems: 'center',
@@ -210,30 +218,41 @@ const Cart = () => {
                 </Box>
               );
             })}
-            <MobileCheckOutBtn size={'large'} onClick={() => router.push('/checkout')} variant='contained' fullWidth>
-              Checkout (₦{formatNumber(calculateTotalAmount(items))})
+            <MobileCheckOutBtn
+              size='large'
+              onClick={() => router.push('/checkout')}
+              variant='contained'
+              fullWidth
+            >
+              Checkout (₦{formatNumber(totalAmount)})
             </MobileCheckOutBtn>
           </Grid2>
+
+          {/* Cart Summary */}
           <Grid2
             size={{ xs: 12, sm: 4 }}
-            position={{ xs: 'static', sm: 'sticky' }}
-            sx={{ top: 32 }}
+            sx={{
+              position: { xs: 'static', sm: 'sticky' },
+              top: 32,
+            }}
           >
             <Box>
-              <Typography variant={'h6'}>Cart Summary</Typography>
-              <Divider />
-              <Stack
-                marginTop={2}
-                direction='row'
-                justifyContent='space-between'
-              >
+              <Typography variant='h6'>Cart Summary</Typography>
+              <Divider sx={{ my: 1 }} />
+              <Stack mt={2} direction='row' justifyContent='space-between'>
                 <Typography>Subtotal:</Typography>
-                <Typography variant={'h6'}>
-                  ₦{formatNumber(calculateTotalAmount(items))}
+                <Typography variant='h6'>
+                  ₦{formatNumber(totalAmount)}
                 </Typography>
               </Stack>
-              <PCCheckOutBtn size={'large'} onClick={() => router.push('/checkout')} variant='contained' fullWidth>
-                Checkout (₦{formatNumber(calculateTotalAmount(items))})
+              <PCCheckOutBtn
+                size='large'
+                onClick={() => router.push('/checkout')}
+                variant='contained'
+                fullWidth
+                sx={{ mt: 2 }}
+              >
+                Checkout (₦{formatNumber(totalAmount)})
               </PCCheckOutBtn>
             </Box>
           </Grid2>
@@ -245,17 +264,23 @@ const Cart = () => {
             justifyContent: 'center',
             flexDirection: 'column',
             gap: 2,
+            mt: 4,
           }}
         >
           <Typography textAlign='center' variant='h6'>
-            No items is cart
+            No items in cart
           </Typography>
-          <Button variant='contained' size='large' onClick={() => router.push('/products')}>
-            View products
+          <Button
+            variant='contained'
+            size='large'
+            onClick={() => router.push('/products')}
+          >
+            View Products
           </Button>
         </Box>
       )}
     </Stack>
   );
 };
+
 export default Cart;
