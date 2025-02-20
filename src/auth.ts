@@ -8,10 +8,8 @@ import { object, string } from 'zod';
 import UserModel from './models/User.model';
 
 const userObject = object({
-  email: string().email({ message: 'Invalid email address' }),
-  password: string().min(6, {
-    message: 'Password must be a minimum of 6 characters',
-  }),
+  email: string().email('Invalid email format').toLowerCase(),
+  password: string().min(6, 'Password must be at least 6 characters long'),
 });
 
 const option: NextAuthConfig = {

@@ -3,12 +3,13 @@
 import React, { ChangeEvent, FormEvent, useState, useCallback } from 'react';
 import { Box, Button, Grid2, TextField, Typography } from '@mui/material';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import SimpleSnackbar from '@/components/snackbar';
 import { errorHandler } from '@/lib/errorHandler';
 
 const Login = () => {
   const router = useRouter();
+  const params = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -59,7 +60,7 @@ const Login = () => {
         return;
       }
 
-      router.push('/');
+      router.push(params.get('callback') || '/');
     } catch (error) {
       console.error(errorHandler(error));
     } finally {

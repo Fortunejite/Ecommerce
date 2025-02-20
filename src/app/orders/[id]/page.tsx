@@ -45,7 +45,7 @@ const PriceSection = ({ product }: { product: IProduct }) => {
 
 const OrderDetails = () => {
   const router = useRouter();
-  const { data: session, status: sessionStatus } = useSession();
+  const { status: sessionStatus } = useSession();
   const { id } = useParams();
   const [order, setOrder] = useState<IOrder | null>(null);
   const [loading, setLoading] = useState(true);

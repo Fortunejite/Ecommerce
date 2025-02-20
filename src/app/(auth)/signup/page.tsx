@@ -1,15 +1,17 @@
 'use client';
+import SimpleSnackbar from '@/components/snackbar';
 import { errorHandler } from '@/lib/errorHandler';
 import { Box, Button, Grid2, TextField, Typography } from '@mui/material';
 import axios from 'axios';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { ChangeEvent, FormEvent, useState } from 'react';
+import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 
 const Signup = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     name: '',
@@ -18,15 +20,22 @@ const Signup = () => {
     password: '',
   });
 
+  useEffect(() => {
+    if (formErrors.general?.length) setSnackbarOpen(true);
+    // Clear form errors when the component is mounted
+    return () => setFormErrors({});
+  }, [formErrors.general]);
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear the error for this field as the user types
     setFormErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
   const validateForm = () => {
-    const { name, email, phoneNumber, password } = formData;
     const errors: Record<string, string> = {};
+    const { name, email, phoneNumber, password } = formData;
 
     if (name.trim().length < 3) {
       errors.name = 'Name must be at least 3 characters long';
@@ -58,12 +67,31 @@ const Signup = () => {
         redirect: false,
       });
       if (res?.error) {
-        console.error(res.error);
+        // Set a generic error if sign in fails
+        setFormErrors((prev) => ({
+          ...prev,
+          general: res.error || 'Invalid credentials',
+        }));
         return;
       }
       router.push('/');
     } catch (err) {
-      console.error(errorHandler(err));
+      console.error(err);
+      // If error is an AxiosError, try to extract form errors from the API response.
+      if (axios.isAxiosError(err)) {
+        const apiMessage = err.response?.data?.message;
+        if (apiMessage && typeof apiMessage === 'object') {
+          setFormErrors(apiMessage);
+        } else {
+          setFormErrors((prev) => ({
+            ...prev,
+            general:
+              (apiMessage as string) || 'An error occurred. Please try again.',
+          }));
+        }
+      } else {
+        setFormErrors((prev) => ({ ...prev, general: errorHandler(err) }));
+      }
     } finally {
       setLoading(false);
     }
@@ -71,7 +99,7 @@ const Signup = () => {
 
   return (
     <Grid2
-      size={{ xs: 16, sm: 6 }}
+      size={{ xs: 12, sm: 6 }}
       component='form'
       p={{ xs: 2, sm: 8 }}
       gap={2}
@@ -131,6 +159,11 @@ const Signup = () => {
         onChange={handleChange}
         fullWidth
       />
+      {formErrors.general && (
+        <Typography variant='body2' color='error'>
+          {formErrors.general}
+        </Typography>
+      )}
       <Button
         type='submit'
         variant='contained'
@@ -146,6 +179,11 @@ const Signup = () => {
           Login
         </Link>
       </Typography>
+      <SimpleSnackbar
+        open={snackbarOpen}
+        setOpen={setSnackbarOpen}
+        message={formErrors.general}
+      />
     </Grid2>
   );
 };

@@ -23,77 +23,77 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 
 const OrderElement = ({ order }: { order: IOrder }) => {
   const router = useRouter();
   const isMobile = useMediaQuery((theme: Theme) =>
-    theme.breakpoints.down('sm'),
+    theme.breakpoints.down('sm')
   );
-
   const { trackingId, status } = order;
-  const cartItems = order.cartItems as unknown as ({
-    product: IProduct;
-  } & IOrder['cartItems'][0])[];
+  // Type assertion for cartItems
+  const cartItems = order.cartItems as unknown as ( { product: IProduct } & IOrder['cartItems'][0] )[];
 
-  return cartItems.map(({ product, quantity }) => (
-    <Paper key={product._id.toString()}>
-      <Grid2 container spacing={2}>
-        <Grid2 size={{ xs: 3, sm: 2 }} sx={{ position: 'relative' }}>
-          <Image
-            src={product.mainPic}
-            alt={product.name}
-            fill
-            objectFit='contain'
-            style={{
-              padding: '8px',
-            }}
-          />
-        </Grid2>
-        <Grid2
-          size={{ xs: 9, sm: 8 }}
-          p={1}
-          onClick={
-            isMobile ? () => router.push(`/orders/${trackingId}`) : () => {}
-          }
-        >
-          <Typography>{product.name}</Typography>
-          <Typography variant='body2'>Order {trackingId}</Typography>
-          <OrderStatus status={status} />
-          <Stack direction='row' gap={1} alignItems='center'>
-            {product.variation && (
-              <Typography>
-                Variation: <strong>{product.variation}</strong>
+  return (
+    <>
+      {cartItems.map(({ product, quantity }) => (
+        <Paper key={product._id.toString()} sx={{ mb: 2, p: 1 }}>
+          <Grid2 container spacing={2}>
+            <Grid2 size={{ xs: 3, sm: 2 }} sx={{ position: 'relative' }}>
+              <Image
+                src={product.mainPic}
+                alt={product.name}
+                fill
+                objectFit="contain"
+                style={{ padding: '4px' }}
+              />
+            </Grid2>
+            <Grid2
+              size={{ xs: 9, sm: 8 }}
+              p={1}
+              onClick={isMobile ? () => router.push(`/orders/${trackingId}`) : undefined}
+              sx={{ cursor: isMobile ? 'pointer' : 'default' }}
+            >
+              <Typography variant="subtitle1">{product.name}</Typography>
+              <Typography variant="body2">Order {trackingId}</Typography>
+              <OrderStatus status={status} />
+              <Stack direction="row" gap={1} alignItems="center" mt={1}>
+                {product.variation && (
+                  <Typography variant="body2">
+                    Variation: <strong>{product.variation}</strong>
+                  </Typography>
+                )}
+                {product.volume && (
+                  <Typography variant="body2">
+                    Volume: <strong>{product.volume}</strong>
+                  </Typography>
+                )}
+              </Stack>
+              <Typography variant="body2" mt={1}>
+                QTY: <strong>{quantity}</strong>
               </Typography>
-            )}
-            {product.volume && (
-              <Typography>
-                Volume: <strong>{product.volume}</strong>
-              </Typography>
-            )}
-          </Stack>
-            <Typography>
-              QTY: <strong>{quantity}</strong>
-            </Typography>
-        </Grid2>
-        <Grid2
-          size={2}
-          display={{ xs: 'none', sm: 'flex' }}
-          alignItems={'center'}
-          justifyContent={'center'}
-        >
-          <Button onClick={() => router.push(`/orders/${trackingId}`)}>
-            See details
-          </Button>
-        </Grid2>
-      </Grid2>
-    </Paper>
-  ));
+            </Grid2>
+            <Grid2
+              size={2}
+              display={{ xs: 'none', sm: 'flex' }}
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Button onClick={() => router.push(`/orders/${trackingId}`)}>
+                See details
+              </Button>
+            </Grid2>
+          </Grid2>
+        </Paper>
+      ))}
+    </>
+  );
 };
+
 const OrderSkeleton = () => {
   return (
-    <Paper>
-      <Grid2 container spacing={2}>
+    <Paper sx={{ mb: 2, p: 1 }}>
+      <Grid2 container spacing={2} alignItems="center">
         <Grid2
           size={{ xs: 3, sm: 2 }}
           sx={{
@@ -103,25 +103,25 @@ const OrderSkeleton = () => {
             alignItems: 'center',
           }}
         >
-          <Skeleton variant='rectangular' height={100} width={100} />
+          <Skeleton variant="rectangular" height={100} width={100} />
         </Grid2>
         <Grid2 size={{ xs: 9, sm: 8 }} p={1}>
-          <Skeleton variant='text' sx={{ fontSize: '1rem' }} />
-          <Skeleton variant='text' sx={{ fontSize: '1rem' }} />
-          <Skeleton variant='text' sx={{ fontSize: '1rem', width: '100px' }} />
-          <Stack direction='row' gap={1} alignItems='center'>
-            <Skeleton variant='text' sx={{ fontSize: '1rem', width: '50px' }} />
-            <Skeleton variant='text' sx={{ fontSize: '1rem', width: '50px' }} />
+          <Skeleton variant="text" sx={{ fontSize: '1rem' }} />
+          <Skeleton variant="text" sx={{ fontSize: '1rem' }} />
+          <Skeleton variant="text" sx={{ fontSize: '1rem', width: '100px' }} />
+          <Stack direction="row" gap={1} alignItems="center" mt={1}>
+            <Skeleton variant="text" sx={{ fontSize: '1rem', width: '50px' }} />
+            <Skeleton variant="text" sx={{ fontSize: '1rem', width: '50px' }} />
           </Stack>
-          <Skeleton variant='text' sx={{ fontSize: '1rem', width: '50px' }} />
+          <Skeleton variant="text" sx={{ fontSize: '1rem', width: '50px' }} />
         </Grid2>
         <Grid2
           size={2}
           display={{ xs: 'none', sm: 'flex' }}
-          alignItems={'center'}
-          justifyContent={'center'}
+          alignItems="center"
+          justifyContent="center"
         >
-          <Skeleton variant='rectangular' height={30} width={60} />
+          <Skeleton variant="rectangular" height={30} width={60} />
         </Grid2>
       </Grid2>
     </Paper>
@@ -130,162 +130,118 @@ const OrderSkeleton = () => {
 
 const Orders = () => {
   const router = useRouter();
-  const session = useSession();
+  const { status: sessionStatus } = useSession();
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [count, setCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  // const [search, setSearch] = useState('');
-  const [status, setStatus] = useState<IOrder['status'] | 'all'>('all');
+  const [orderStatusFilter, setOrderStatusFilter] = useState<IOrder['status'] | 'all'>('all');
 
   const LIMIT = 10;
   const pageCount = Math.ceil(count / LIMIT) || 1;
+  const BASE_URL = `/api/orders?limit=${LIMIT}`;
 
-  const URL = `/api/orders?limit=${LIMIT}`;
-
-  if (!session) router.push('/login?callback=/orders');
+  // Redirect if unauthenticated
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const res = await axios.get(URL);
-        const { orders, totalCount } = res.data;
-        setOrders(orders);
-        setCount(totalCount);
-      } catch (e) {
-        console.log(e);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (sessionStatus === 'unauthenticated') {
+      router.push('/login?callback=/orders');
+    }
+  }, [sessionStatus, router]);
 
+  // Fetch orders with optional query parameters
+  const fetchOrders = useCallback(async (paramsString: string = '') => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${BASE_URL}${paramsString}`);
+      const { orders, totalCount } = res.data;
+      setOrders(orders);
+      setCount(totalCount);
+    } catch (e) {
+      console.error(errorHandler(e));
+    } finally {
+      setLoading(false);
+    }
+  }, [BASE_URL]);
+
+  // Initial fetch
+  useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [fetchOrders]);
 
-  const filterStatus = async (status: IOrder['status'] | 'all') => {
-    try {
+  const handleFilterStatus = useCallback(
+    async (statusFilter: IOrder['status'] | 'all') => {
       const params = new URLSearchParams();
-      params.append('status', status === 'all' ? '' : status);
+      params.append('status', statusFilter === 'all' ? '' : statusFilter);
       setCurrentPage(1);
-      setLoading(true);
-      setStatus(status);
-      const res = await axios.get(`${URL}&${params.toString()}`);
-      const { orders, totalCount } = res.data;
-      setOrders(orders);
-      setCount(totalCount);
-    } catch (e) {
-      console.log(errorHandler(e));
-    } finally {
-      setLoading(false);
-    }
-  };
+      setOrderStatusFilter(statusFilter);
+      await fetchOrders(`&${params.toString()}`);
+    },
+    [fetchOrders]
+  );
 
-  const changePage = async (e: ChangeEvent<unknown>, value: number) => {
-    try {
+  const handleChangePage = useCallback(
+    async (e: ChangeEvent<unknown>, page: number) => {
       const params = new URLSearchParams();
-      params.append('status', status);
-      params.append('page', value.toString());
-      setCurrentPage(value);
-      setLoading(true);
-      const res = await axios.get(`${URL}&${params.toString()}`);
-      const { orders, totalCount } = res.data;
-      setOrders(orders);
-      setCount(totalCount);
-    } catch (e) {
-      console.log(errorHandler(e));
-    } finally {
-      setLoading(false);
-    }
-  };
+      params.append('status', orderStatusFilter === 'all' ? '' : orderStatusFilter);
+      params.append('page', page.toString());
+      setCurrentPage(page);
+      await fetchOrders(`&${params.toString()}`);
+    },
+    [fetchOrders, orderStatusFilter]
+  );
+
+  const statusOptions: (IOrder['status'] | 'all')[] = ['all', 'processing', 'shipped', 'delivered'];
 
   return (
     <Stack gap={2} p={{ xs: 1, sm: 4 }}>
       <Breadcrumbs>
-        <Link href={'/'}>Home</Link>
+        <Link href="/">Home</Link>
         <Typography>My Orders</Typography>
       </Breadcrumbs>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-        }}
-      >
-        <Stack direction={'row'} gap={1}>
-          <Chip
-            label='All'
-            variant={status === 'all' ? 'filled' : 'outlined'}
-            onClick={() => filterStatus('all')}
-            disabled={loading || status === 'all'}
-            color='primary'
-          />
-          <Chip
-            label='Processing'
-            variant={status === 'processing' ? 'filled' : 'outlined'}
-            onClick={() => filterStatus('processing')}
-            disabled={loading || status === 'processing'}
-            color='primary'
-          />
-          <Chip
-            label='Shipped'
-            variant={status === 'shipped' ? 'filled' : 'outlined'}
-            onClick={() => filterStatus('shipped')}
-            disabled={loading || status === 'shipped'}
-            color='primary'
-          />
-          <Chip
-            label='Delivered'
-            variant={status === 'delivered' ? 'filled' : 'outlined'}
-            onClick={() => filterStatus('delivered')}
-            disabled={loading || status === 'delivered'}
-            color='primary'
-          />
+
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+        <Stack direction="row" gap={1}>
+          {statusOptions.map((option) => (
+            <Chip
+              key={option}
+              label={option.charAt(0).toUpperCase() + option.slice(1)}
+              variant={orderStatusFilter === option ? 'filled' : 'outlined'}
+              onClick={() => handleFilterStatus(option)}
+              disabled={loading || orderStatusFilter === option}
+              color="primary"
+            />
+          ))}
         </Stack>
       </Box>
+
       {loading ? (
         <Stack gap={2}>
           {[1, 2, 3, 4].map((i) => (
             <OrderSkeleton key={i} />
           ))}
         </Stack>
-      ) : orders.length ? (
+      ) : orders.length > 0 ? (
         <>
           <Stack gap={2}>
             {orders.map((order) => (
               <OrderElement key={order._id.toString()} order={order} />
             ))}
           </Stack>
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <Pagination
               count={pageCount}
               page={currentPage}
-              shape='rounded'
-              onChange={changePage}
+              shape="rounded"
+              onChange={handleChangePage}
             />
           </Box>
         </>
       ) : (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            flexDirection: 'column',
-            gap: 2,
-          }}
-        >
-          <Typography textAlign='center' variant='h6'>
+        <Box sx={{ display: 'flex', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
+          <Typography textAlign="center" variant="h6">
             No order is available
           </Typography>
-          <Button
-            variant='contained'
-            size='large'
-            onClick={() => router.push('/products')}
-          >
+          <Button variant="contained" size="large" onClick={() => router.push('/products')}>
             View products
           </Button>
         </Box>
