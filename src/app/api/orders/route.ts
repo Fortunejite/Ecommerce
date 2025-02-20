@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
 
     const [orders, totalCount] = await Promise.all([
       Order.find(query)
+        .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .populate('user')
