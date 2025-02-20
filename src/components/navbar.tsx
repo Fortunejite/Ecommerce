@@ -11,6 +11,7 @@ import {
   Person,
   ShoppingBag,
   Logout,
+  SupervisorAccount,
 } from '@mui/icons-material';
 import {
   AppBar,
@@ -59,6 +60,7 @@ interface NavbarProps {
 interface DrawerProps extends NavbarProps {
   open: boolean;
   setOpen: (open: boolean) => void;
+  isAdmin: boolean;
 }
 
 const navigations = [
@@ -74,7 +76,7 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   backgroundColor: theme.palette.background.default,
   color: theme.palette.text.primary,
   [theme.breakpoints.down('sm')]: {
-    padding: 0,
+    pr: 1,
   },
 }));
 
@@ -153,7 +155,7 @@ const ModeSwitch = styled(Switch)(({ theme }) => ({
   },
 }));
 
-const Drawer = ({ open, setOpen, mode, setMode }: DrawerProps) => {
+const Drawer = ({ open, setOpen, mode, setMode, isAdmin }: DrawerProps) => {
   // Toggle dark/light mode
   const handleModeToggle = useCallback(() => {
     setMode((prev) => {
@@ -165,22 +167,30 @@ const Drawer = ({ open, setOpen, mode, setMode }: DrawerProps) => {
 
   return (
     <SwipeableDrawer
-      anchor="left"
+      anchor='left'
       open={open}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
       sx={{ display: { xs: 'block', sm: 'none' } }}
     >
-      <Box width={250} onClick={() => setOpen(false)}>
+      <Box width={250}>
         <List>
           {navigations.map(({ name, icon, url }) => (
-            <ListItem key={url} disablePadding>
+            <ListItem key={url} disablePadding onClick={() => setOpen(false)}>
               <ListItemButton component={Link} href={url}>
                 <ListItemIcon>{icon}</ListItemIcon>
                 <ListItemText primary={name} />
               </ListItemButton>
             </ListItem>
           ))}
+          {isAdmin && (
+            <ListItem disablePadding onClick={() => setOpen(false)}>
+              <ListItemButton component={Link} href={'/admin'}>
+                <ListItemIcon>{<SupervisorAccount />}</ListItemIcon>
+                <ListItemText primary={'Admin'} />
+              </ListItemButton>
+            </ListItem>
+          )}
           <ListItem>
             <FormControlLabel
               control={
@@ -200,17 +210,19 @@ const Drawer = ({ open, setOpen, mode, setMode }: DrawerProps) => {
 };
 
 const Navbar = ({ mode, setMode }: NavbarProps) => {
-  const session = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const pathname = usePathname();
   const dispatch = useAppDispatch();
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
   const { status: favStatus, products: favorites } = useAppSelector(
-    (state) => state.favourite
+    (state) => state.favourite,
   );
-  const { status: cartStatus, items: cart } = useAppSelector((state) => state.cart);
-  const user = session.data?.user;
+  const { status: cartStatus, items: cart } = useAppSelector(
+    (state) => state.cart,
+  );
+  const user = session?.user;
 
   // Memoized toggle for mode (used in both desktop and drawer)
   const toggleMode = useCallback(() => {
@@ -223,13 +235,13 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
 
   // Fetch user favourites, cart, categories, and tags when available
   useEffect(() => {
-    if (user && favStatus === 'idle') {
+    if (sessionStatus !== 'unauthenticated' && favStatus === 'idle') {
       dispatch(fetchFavourite());
     }
-    if (user && cartStatus === 'idle') {
+    if (sessionStatus !== 'unauthenticated' && cartStatus === 'idle') {
       dispatch(fetchCart());
     }
-  }, [dispatch, user, favStatus, cartStatus]);
+  }, [dispatch, sessionStatus, favStatus, cartStatus]);
 
   useEffect(() => {
     dispatch(fetchCategories());
@@ -245,41 +257,62 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
   }, []);
 
   return (
-    <AppBar position="sticky" elevation={1}>
+    <AppBar position='sticky' elevation={1}>
       <StyledToolbar>
-        <Stack direction="row" alignItems="center">
+        <Stack direction='row' gap={1}>
           <IconButton
             onClick={() => setOpen(true)}
-            sx={{ display: { xs: 'block', sm: 'none' } }}
-            aria-label="Open navigation menu"
+            sx={{
+              display: { xs: 'flex', sm: 'none' },
+              alignItems: 'center',
+              p: 0,
+            }}
+            aria-label='Open navigation menu'
           >
             <MenuIcon />
           </IconButton>
-          <Drawer open={open} setOpen={setOpen} mode={mode} setMode={setMode} />
-          <Typography variant="h6">Exclusive</Typography>
+          <Drawer
+            open={open}
+            setOpen={setOpen}
+            mode={mode}
+            setMode={setMode}
+            isAdmin={user?.isAdmin || false}
+          />
+          <Typography variant='h6'>Exclusive</Typography>
         </Stack>
         <Links>
           {navigations.map(({ name, url }) => (
             <Link key={url} href={url} passHref>
               {url === pathname ? (
-                <ActiveLink variant="body1">{name}</ActiveLink>
+                <ActiveLink variant='body1'>{name}</ActiveLink>
               ) : (
-                <Typography variant="body1" component="h6">
+                <Typography variant='body1' component='h6'>
                   {name}
                 </Typography>
               )}
             </Link>
           ))}
+          {user?.isAdmin && (
+            <Link href={'/admin'} passHref>
+              {'/admin' === pathname ? (
+                <ActiveLink variant='body1'>Admin</ActiveLink>
+              ) : (
+                <Typography variant='body1' component='h6'>
+                  Admin
+                </Typography>
+              )}
+            </Link>
+          )}
           <ModeSwitch checked={mode === 'dark'} onChange={toggleMode} />
         </Links>
         <Actions>
-          <Link href="/favourite" passHref>
-            <Badge badgeContent={favorites.length} color="primary">
+          <Link href='/favourite' passHref>
+            <Badge badgeContent={favorites.length} color='primary'>
               <FavoriteBorderOutlined />
             </Badge>
           </Link>
-          <Link href="/cart" passHref>
-            <Badge badgeContent={cart.length} color="primary">
+          <Link href='/cart' passHref>
+            <Badge badgeContent={cart.length} color='primary'>
               <ShoppingCartOutlined />
             </Badge>
           </Link>
@@ -287,7 +320,7 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
             <Avatar
               onClick={handleMenuOpen}
               sx={{ width: 30, height: 30, cursor: 'pointer' }}
-              alt="User avatar"
+              alt='User avatar'
             />
           )}
           <Menu
@@ -297,11 +330,17 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
             anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
             transformOrigin={{ vertical: 'top', horizontal: 'left' }}
           >
-            <MenuItem onClick={handleMenuClose} component={Link} href="/profile">
-              <Person fontSize="small" />&nbsp;Manage My Account
+            <MenuItem
+              onClick={handleMenuClose}
+              component={Link}
+              href='/profile'
+            >
+              <Person fontSize='small' />
+              &nbsp;Manage My Account
             </MenuItem>
-            <MenuItem onClick={handleMenuClose} component={Link} href="/orders">
-              <ShoppingBag fontSize="small" />&nbsp;My Order
+            <MenuItem onClick={handleMenuClose} component={Link} href='/orders'>
+              <ShoppingBag fontSize='small' />
+              &nbsp;My Order
             </MenuItem>
             <MenuItem
               onClick={() => {
@@ -309,7 +348,8 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
                 handleMenuClose();
               }}
             >
-              <Logout fontSize="small" />&nbsp;Logout
+              <Logout fontSize='small' />
+              &nbsp;Logout
             </MenuItem>
           </Menu>
         </Actions>

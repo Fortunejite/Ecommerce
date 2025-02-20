@@ -1,5 +1,6 @@
 import { handleMongooseError } from '@/lib/errorHandler';
 import Product from '@/models/Product.model';
+import { SortOrder } from 'mongoose';
 import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   try {
@@ -24,9 +25,15 @@ export async function GET(request: NextRequest) {
       ...(maxPrice && { price: { $lte: maxPrice } }),
       ...(rating && { rating: { $gte: rating } }),
     };
+    const sort = {
+      ...(rating && { rating: -1 }),
+      ...((minPrice || maxPrice) && { price: -1 }),
+      createdAt: -1,
+    } as { [key: string]: SortOrder };
 
     const [products, totalCount] = await Promise.all([
       Product.find(query)
+        .sort(sort)
         .skip(skip)
         .limit(limit)
         .populate('tags')

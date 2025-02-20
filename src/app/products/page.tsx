@@ -37,7 +37,7 @@ export default function Products() {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const url = `/api/products?limit=${LIMIT}&${queryString}&page=${currentPage}`;
+      const url = `/api/products?limit=${LIMIT}&page=${currentPage}&${queryString}`;
       const res = await axios.get(url);
       const { products, totalCount } = res.data;
       setProducts(products);
