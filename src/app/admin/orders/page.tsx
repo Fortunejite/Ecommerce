@@ -28,11 +28,13 @@ import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 const OrderElement = ({ order }: { order: IOrder }) => {
   const router = useRouter();
   const isMobile = useMediaQuery((theme: Theme) =>
-    theme.breakpoints.down('sm')
+    theme.breakpoints.down('sm'),
   );
   const { trackingId, status } = order;
   // Type assertion for cartItems
-  const cartItems = order.cartItems as unknown as ( { product: IProduct } & IOrder['cartItems'][0] )[];
+  const cartItems = order.cartItems as unknown as ({
+    product: IProduct;
+  } & IOrder['cartItems'][0])[];
 
   return (
     <>
@@ -44,40 +46,44 @@ const OrderElement = ({ order }: { order: IOrder }) => {
                 src={product.mainPic}
                 alt={product.name}
                 fill
-                objectFit="contain"
+                objectFit='contain'
                 style={{ padding: '4px' }}
               />
             </Grid2>
             <Grid2
               size={{ xs: 9, sm: 8 }}
               p={1}
-              onClick={isMobile ? () => router.push(`/orders/${trackingId}`) : undefined}
+              onClick={
+                isMobile
+                  ? () => router.push(`/orders/${trackingId}`)
+                  : undefined
+              }
               sx={{ cursor: isMobile ? 'pointer' : 'default' }}
             >
-              <Typography variant="subtitle1">{product.name}</Typography>
-              <Typography variant="body2">Order {trackingId}</Typography>
+              <Typography variant='subtitle1'>{product.name}</Typography>
+              <Typography variant='body2'>Order {trackingId}</Typography>
               <OrderStatus status={status} />
-              <Stack direction="row" gap={1} alignItems="center" mt={1}>
+              <Stack direction='row' gap={1} alignItems='center' mt={1}>
                 {product.variation && (
-                  <Typography variant="body2">
+                  <Typography variant='body2'>
                     Variation: <strong>{product.variation}</strong>
                   </Typography>
                 )}
                 {product.volume && (
-                  <Typography variant="body2">
+                  <Typography variant='body2'>
                     Volume: <strong>{product.volume}</strong>
                   </Typography>
                 )}
               </Stack>
-              <Typography variant="body2" mt={1}>
+              <Typography variant='body2' mt={1}>
                 QTY: <strong>{quantity}</strong>
               </Typography>
             </Grid2>
             <Grid2
               size={2}
               display={{ xs: 'none', sm: 'flex' }}
-              alignItems="center"
-              justifyContent="center"
+              alignItems='center'
+              justifyContent='center'
             >
               <Button onClick={() => router.push(`/orders/${trackingId}`)}>
                 See details
@@ -93,7 +99,7 @@ const OrderElement = ({ order }: { order: IOrder }) => {
 const OrderSkeleton = () => {
   return (
     <Paper sx={{ mb: 2, p: 1 }}>
-      <Grid2 container spacing={2} alignItems="center">
+      <Grid2 container spacing={2} alignItems='center'>
         <Grid2
           size={{ xs: 3, sm: 2 }}
           sx={{
@@ -103,25 +109,25 @@ const OrderSkeleton = () => {
             alignItems: 'center',
           }}
         >
-          <Skeleton variant="rectangular" height={100} width={100} />
+          <Skeleton variant='rectangular' height={100} width={100} />
         </Grid2>
         <Grid2 size={{ xs: 9, sm: 8 }} p={1}>
-          <Skeleton variant="text" sx={{ fontSize: '1rem' }} />
-          <Skeleton variant="text" sx={{ fontSize: '1rem' }} />
-          <Skeleton variant="text" sx={{ fontSize: '1rem', width: '100px' }} />
-          <Stack direction="row" gap={1} alignItems="center" mt={1}>
-            <Skeleton variant="text" sx={{ fontSize: '1rem', width: '50px' }} />
-            <Skeleton variant="text" sx={{ fontSize: '1rem', width: '50px' }} />
+          <Skeleton variant='text' sx={{ fontSize: '1rem' }} />
+          <Skeleton variant='text' sx={{ fontSize: '1rem' }} />
+          <Skeleton variant='text' sx={{ fontSize: '1rem', width: '100px' }} />
+          <Stack direction='row' gap={1} alignItems='center' mt={1}>
+            <Skeleton variant='text' sx={{ fontSize: '1rem', width: '50px' }} />
+            <Skeleton variant='text' sx={{ fontSize: '1rem', width: '50px' }} />
           </Stack>
-          <Skeleton variant="text" sx={{ fontSize: '1rem', width: '50px' }} />
+          <Skeleton variant='text' sx={{ fontSize: '1rem', width: '50px' }} />
         </Grid2>
         <Grid2
           size={2}
           display={{ xs: 'none', sm: 'flex' }}
-          alignItems="center"
-          justifyContent="center"
+          alignItems='center'
+          justifyContent='center'
         >
-          <Skeleton variant="rectangular" height={30} width={60} />
+          <Skeleton variant='rectangular' height={30} width={60} />
         </Grid2>
       </Grid2>
     </Paper>
@@ -135,33 +141,38 @@ const Orders = () => {
   const [count, setCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [orderStatusFilter, setOrderStatusFilter] = useState<IOrder['status'] | 'all'>('all');
+  const [orderStatusFilter, setOrderStatusFilter] = useState<
+    IOrder['status'] | 'all'
+  >('all');
 
   const LIMIT = 10;
   const pageCount = Math.ceil(count / LIMIT) || 1;
   const BASE_URL = `/api/orders?limit=${LIMIT}`;
 
   // Redirect if unauthenticated
-    useEffect(() => {
-      if (sessionStatus === 'unauthenticated') {
-        router.push('/login?callback=/orders');
-      }
-    }, [sessionStatus, router]);
+  useEffect(() => {
+    if (sessionStatus === 'unauthenticated') {
+      router.push('/login?callback=/orders');
+    }
+  }, [sessionStatus, router]);
 
   // Fetch orders with optional query parameters
-  const fetchOrders = useCallback(async (paramsString: string = '') => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${BASE_URL}${paramsString}`);
-      const { orders, totalCount } = res.data;
-      setOrders(orders);
-      setCount(totalCount);
-    } catch (e) {
-      console.error(errorHandler(e));
-    } finally {
-      setLoading(false);
-    }
-  }, [BASE_URL]);
+  const fetchOrders = useCallback(
+    async (paramsString: string = '') => {
+      setLoading(true);
+      try {
+        const res = await axios.get(`${BASE_URL}${paramsString}`);
+        const { orders, totalCount } = res.data;
+        setOrders(orders);
+        setCount(totalCount);
+      } catch (e) {
+        console.error(errorHandler(e));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [BASE_URL],
+  );
 
   // Initial fetch
   useEffect(() => {
@@ -176,31 +187,45 @@ const Orders = () => {
       setOrderStatusFilter(statusFilter);
       await fetchOrders(`&${params.toString()}`);
     },
-    [fetchOrders]
+    [fetchOrders],
   );
 
   const handleChangePage = useCallback(
     async (e: ChangeEvent<unknown>, page: number) => {
       const params = new URLSearchParams();
-      params.append('status', orderStatusFilter === 'all' ? '' : orderStatusFilter);
+      params.append(
+        'status',
+        orderStatusFilter === 'all' ? '' : orderStatusFilter,
+      );
       params.append('page', page.toString());
       setCurrentPage(page);
       await fetchOrders(`&${params.toString()}`);
     },
-    [fetchOrders, orderStatusFilter]
+    [fetchOrders, orderStatusFilter],
   );
 
-  const statusOptions: (IOrder['status'] | 'all')[] = ['all', 'processing', 'shipped', 'delivered'];
+  const statusOptions: (IOrder['status'] | 'all')[] = [
+    'all',
+    'processing',
+    'shipped',
+    'delivered',
+  ];
 
   return (
     <Stack gap={2} p={{ xs: 1, sm: 4 }}>
       <Breadcrumbs>
-        <Link href="/">Home</Link>
-        <Typography>My Orders</Typography>
+        <Link href='/'>Admin</Link>
+        <Typography>Manage Orders</Typography>
       </Breadcrumbs>
 
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-        <Stack direction="row" gap={1}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+        }}
+      >
+        <Stack direction='row' gap={1}>
           {statusOptions.map((option) => (
             <Chip
               key={option}
@@ -208,7 +233,7 @@ const Orders = () => {
               variant={orderStatusFilter === option ? 'filled' : 'outlined'}
               onClick={() => handleFilterStatus(option)}
               disabled={loading || orderStatusFilter === option}
-              color="primary"
+              color='primary'
             />
           ))}
         </Stack>
@@ -216,7 +241,7 @@ const Orders = () => {
 
       {loading ? (
         <Stack gap={2}>
-          {[1, 2, 3, 4].map((i) => (
+          {Array.from({ length: 4 }).map((_, i) => (
             <OrderSkeleton key={i} />
           ))}
         </Stack>
@@ -227,22 +252,39 @@ const Orders = () => {
               <OrderElement key={order._id.toString()} order={order} />
             ))}
           </Stack>
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
             <Pagination
               count={pageCount}
               page={currentPage}
-              shape="rounded"
+              shape='rounded'
               onChange={handleChangePage}
             />
           </Box>
         </>
       ) : (
-        <Box sx={{ display: 'flex', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
-          <Typography textAlign="center" variant="h6">
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
+          <Typography textAlign='center' variant='h6'>
             No order is available
           </Typography>
-          <Button variant="contained" size="large" onClick={() => router.push('/products')}>
-            View products
+          <Button
+            variant='contained'
+            size='large'
+            onClick={() => router.push('/admin')}
+          >
+            View Dashboard
           </Button>
         </Box>
       )}
