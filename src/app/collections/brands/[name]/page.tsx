@@ -8,7 +8,13 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { ChangeEvent, useCallback, useEffect, useState, useMemo } from 'react';
+import {
+  ChangeEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import FilterDrawer from './filterDrawer';
 import { IProduct } from '@/models/Product.model';
 import Product from '@/components/product';
@@ -16,38 +22,40 @@ import { Tune } from '@mui/icons-material';
 import { errorHandler } from '@/lib/errorHandler';
 import axios from 'axios';
 import ProductSkeleton from '@/components/productSkeleton';
-import { useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useAppDispatch, useAppSelector } from '@/hooks/redux.hook';
+import { getBrandByName } from '@/redux/brandSlice';
 
 export default function Products() {
   const [filterOpen, setFilterOpen] = useState(false);
-  const params = useSearchParams()
-  const InitialParams = new URLSearchParams();
-  InitialParams.append(params.get('field') || '', params.get('value') || '')
-  const [queryString, setQueryString] = useState(InitialParams.toString());
-  const [loading, setLoading] = useState(true);
+  const [queryString, setQueryString] = useState('');
+  const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState<IProduct[]>([]);
   const [count, setCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const { name: nameParam } = useParams();
+  const name = decodeURIComponent(nameParam as string || '')
+  const dispatch = useAppDispatch();
+  const Brand = useAppSelector((state) => getBrandByName(state, name as string));
+
   const LIMIT = 8;
-  const pageCount = Math.ceil(count / LIMIT) || 1;
+  const pageCount = useMemo(() => Math.ceil(count / LIMIT) || 1, [count]);
 
-  const title = params.get('title') || 'All Fragrance & Perfume'
-
-  // Reset current page whenever queryString changes
+  // Reset current page when the query changes
   useEffect(() => {
     setCurrentPage(1);
   }, [queryString]);
 
-  // Compute filtersCount based solely on queryString changes
+  // Calculate filters count based on queryString
   const filtersCount = useMemo(() => {
-    const params = new URLSearchParams(queryString);
+    const searchParams = new URLSearchParams(queryString);
     let count = 0;
-    if (params.get('minPrice')) count++;
-    if (params.get('maxPrice')) count++;
+    if (searchParams.get('minPrice')) count++;
+    if (searchParams.get('maxPrice')) count++;
     ['brands', 'concentration', 'fragranceFamily', 'gender', 'size'].forEach(
       (key) => {
-        const value = params.get(key);
+        const value = searchParams.get(key);
         if (value) {
           count += value.split(',').filter(Boolean).length;
         }
@@ -56,49 +64,44 @@ export default function Products() {
     return count;
   }, [queryString]);
 
-  // Fetch products based on current query and page
+  // Fetch products whenever query, page, or brand changes
   const fetchProducts = useCallback(async () => {
+    if (!Brand) return;
     setLoading(true);
     try {
-      const url = `/api/products?limit=${LIMIT}&page=${currentPage}&${queryString}`;
+      const url = `/api/products?limit=${LIMIT}&page=${currentPage}&brands=${Brand._id}&${queryString}`;
       const { data } = await axios.get(url);
-      const { products, totalCount } = data;
-      setProducts(products);
-      setCount(totalCount);
-    } catch (e) {
-      console.error(errorHandler(e));
+      setProducts(data.products);
+      setCount(data.totalCount);
+    } catch (error) {
+      console.error(errorHandler(error));
     } finally {
       setLoading(false);
     }
-  }, [queryString, currentPage]);
+  }, [queryString, currentPage, Brand]);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
-  const changePage = (e: ChangeEvent<unknown>, value: number) => {
-    setCurrentPage(value);
-  };
+  // Memoize page change handler to prevent unnecessary re-renders
+  const handleChangePage = useCallback(
+    (event: ChangeEvent<unknown>, page: number) => {
+      setCurrentPage(page);
+    },
+    [],
+  );
 
   return (
     <Stack p={{ xs: 1, sm: 4 }} spacing={2}>
       <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
+        sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
       >
         <Box>
-        <Typography variant='h6'>{title}</Typography>
-        <Typography variant='body2'>{count} products</Typography>
-
+          <Typography variant="h6">{Brand?.name} Products</Typography>
+          <Typography variant="body2">{count} products</Typography>
         </Box>
-        <Button
-          variant='contained'
-          endIcon={<Tune />}
-          onClick={() => setFilterOpen(true)}
-        >
+        <Button variant="contained" endIcon={<Tune />} onClick={() => setFilterOpen(true)}>
           Filter
         </Button>
       </Box>
@@ -130,19 +133,17 @@ export default function Products() {
           ))}
         </Grid2>
       ) : (
-        <Typography variant='h6' align='center'>
+        <Typography variant="h6" align="center">
           No results found
         </Typography>
       )}
 
-      <Box
-        sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-      >
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <Pagination
           count={pageCount}
           page={currentPage}
-          shape='rounded'
-          onChange={changePage}
+          shape="rounded"
+          onChange={handleChangePage}
         />
       </Box>
     </Stack>

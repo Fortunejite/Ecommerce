@@ -11,8 +11,7 @@ export async function GET(request: NextRequest) {
       .sort({ discount: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('tags')
-      .populate('category');
+      .populate('brand');
     return NextResponse.json(products);
   } catch (e) {
     console.log(e);

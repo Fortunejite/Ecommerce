@@ -1,6 +1,6 @@
 import { InferSchemaType, Schema, model, models } from 'mongoose';
 
-const categorySchema = new Schema(
+const brandSchema = new Schema(
   {
     name: {
       type: String,
@@ -11,10 +11,10 @@ const categorySchema = new Schema(
   { timestamps: true },
 );
 
-export type inferredFields = InferSchemaType<typeof categorySchema>;
-export type ICategory = {
+export type inferredFields = InferSchemaType<typeof brandSchema>;
+export type IBrand = {
   _id: Schema.Types.ObjectId;
 } & inferredFields;
 
-const Category = models.Category || model('Category', categorySchema);
-export default Category;
+const Brand = models.Brand || model('Brand', brandSchema);
+export default Brand;

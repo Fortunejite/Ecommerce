@@ -1,3 +1,4 @@
+import { Concentrations, FraganceFamily } from '@/lib/perfumeDetails';
 import { InferSchemaType, Schema, model, models } from 'mongoose';
 
 const productSchema = new Schema(
@@ -7,22 +8,26 @@ const productSchema = new Schema(
       required: [true, 'Name is required'],
     },
     description: { type: String, required: [true, 'Description is required'] },
-    tags: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Tag',
-      },
-    ],
-    category: {
+    brand: {
       type: Schema.Types.ObjectId,
-      required: [true, 'A category is required'],
-      ref: 'Tag',
+      required: [true, 'A Brand is required'],
+      ref: 'Brand',
     },
-    sizes: [
-      {
-        type: String,
-      },
-    ],
+    gender: {
+      type: String,
+      enum: ['Men', 'Women', 'Unisex'],
+      required: [true, 'Gender is required'],
+    },
+    concentration: {
+      type: String,
+      enum: Concentrations,
+      required: [true, 'Concentration is required'],
+    },
+    fragranceFamily: {
+      type: String,
+      enum: FraganceFamily,
+      required: [true, 'Fragrance Family is required'],
+    },
     stock: {
       type: Number,
       required: true,
@@ -32,14 +37,9 @@ const productSchema = new Schema(
       type: Number,
       required: [true, 'Price is required'],
     },
-    volume: {
-      type: String,
+    size: {
+      type: Number,
     },
-
-    variation: {
-      type: String,
-    },
-
     discount: {
       type: Number,
       default: 0,

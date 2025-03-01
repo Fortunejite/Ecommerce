@@ -4,6 +4,7 @@ import './globals.css';
 import dbConnect from '@/lib/mongodb';
 import Footer from '@/components/footer';
 import { Box, Stack } from '@mui/material';
+// import { createRandomProducts, insertBrands } from '@/lib/generateRandomProduct';
 
 export const metadata: Metadata = {
   title: 'Account Shopping',
@@ -18,6 +19,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   await dbConnect();
+  // await insertBrands();
+  // await createRandomProducts()
   return (
     <html lang='en'>
       <body>

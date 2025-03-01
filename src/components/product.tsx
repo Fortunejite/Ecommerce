@@ -13,7 +13,6 @@ import {
 import {
   Stack,
   Typography,
-  Rating,
   Box,
   styled,
   IconButton,
@@ -67,17 +66,17 @@ const PriceSection = ({ product }: { product: IProduct }) => {
       product.price - (product.discount / 100) * product.price;
     return (
       <Stack direction="row" spacing={1}>
-        <Typography variant="body1" color="primary">
+        <Typography variant="subtitle1" component='p' color="primary">
           ₦{formatNumber(discountAmount.toFixed(0))}
         </Typography>
-        <Typography variant="body2" sx={{ textDecoration: 'line-through' }}>
+        <Typography variant="subtitle1" sx={{ textDecoration: 'line-through' }}>
           ₦{formatNumber(product.price.toFixed(0))}
         </Typography>
       </Stack>
     );
   }
   return (
-    <Typography variant="body1" color="primary">
+    <Typography variant="subtitle1" component='p' color="primary">
       ₦{formatNumber(product.price.toFixed(0))}
     </Typography>
   );
@@ -174,18 +173,9 @@ const Product = ({ product }: ProductProps) => {
         </Button>
       </ImageContainer>
       <Stack p={1}>
-        <Typography variant="body1">{product.name}</Typography>
+        <Typography variant="subtitle1">{product.name}</Typography>
         <Stack direction="column" spacing={1}>
           <PriceSection product={product} />
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Rating
-              readOnly
-              precision={0.5}
-              size="small"
-              value={product.rating || 0}
-            />
-            <Typography variant="body1">({product.reviews.length})</Typography>
-          </Stack>
         </Stack>
       </Stack>
     </Paper>

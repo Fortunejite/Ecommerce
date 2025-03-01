@@ -129,7 +129,7 @@ const Cart = () => {
                       <Stack spacing={0.5}>
                         <Typography variant='h6'>{product.name}</Typography>
                         <Typography variant='body2'>
-                          Category: {product.category.toString()}
+                          {/* Category: {product.category.toString()} */}
                         </Typography>
                         <Typography
                           variant='body2'

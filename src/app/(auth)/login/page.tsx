@@ -6,6 +6,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import SimpleSnackbar from '@/components/snackbar';
 import { errorHandler } from '@/lib/errorHandler';
+import Link from 'next/link';
 
 const Login = () => {
   const router = useRouter();
@@ -119,6 +120,12 @@ const Login = () => {
       >
         {loading ? 'Logging in...' : 'Login'}
       </Button>
+      <Typography variant='body1' align='center' mt={2}>
+        Don't have an account?{' '}
+        <Link href='/signup' style={{ textDecoration: 'underline' }}>
+          Signup
+        </Link>
+      </Typography>
       <SimpleSnackbar
         open={snackbarOpen}
         setOpen={setSnackbarOpen}

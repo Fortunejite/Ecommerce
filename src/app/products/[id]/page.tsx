@@ -152,8 +152,8 @@ const ProductDetails = () => {
         setCurrentImage(prod.mainPic);
         // Fetch related products based on the product category
         const relatedRes = await axios.get(
-          `/api/products/?category=${
-            (prod.category as { _id: string })._id
+          `/api/products/?brands=${
+            (prod.brand as { _id: string })._id
           }&limit=4`
         );
         setRelatedProducts(relatedRes.data.products);
@@ -277,10 +277,9 @@ const ProductDetails = () => {
           {/* Product Info Section */}
           <Grid2 size={{ xs: 12, sm: 5 }}>
             <Stack gap={1} position="relative">
-              <Typography variant="h6">{product.name}</Typography>
+              <Typography variant="h6">{product.name} {product.size}ml</Typography>
               <Typography>
-                Category:{' '}
-                {((product.category as unknown as { _id: string; name: string }).name) || ''}
+                {((product.brand as unknown as { _id: string; name: string }).name) || ''}
               </Typography>
               <Divider />
               {hasDiscount && discountAmount ? (
@@ -317,14 +316,14 @@ const ProductDetails = () => {
                   ? `${product.stock} units left`
                   : 'Out of Stock'}
               </Typography>
-              <Stack direction="row" gap={1} alignItems="center">
+              {/* <Stack gap={1}>
                 {product.variation && (
                   <Typography>Variation: {product.variation}</Typography>
                 )}
                 {product.volume && (
                   <Typography>Volume: {product.volume}</Typography>
                 )}
-              </Stack>
+              </Stack> */}
               <Stack direction="row" gap={1} alignItems="center">
                 <Rating
                   precision={0.5}

@@ -1,14 +1,7 @@
 'use client';
 
-import {
-  Box,
-  Button,
-  Grid2,
-  Pagination,
-  Stack,
-  Typography,
-} from '@mui/material';
-import { ChangeEvent, useCallback, useEffect, useState, useMemo } from 'react';
+import { Box, Button, Grid2, Pagination, Stack, Typography } from '@mui/material';
+import { ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import FilterDrawer from './filterDrawer';
 import { IProduct } from '@/models/Product.model';
 import Product from '@/components/product';
@@ -16,89 +9,78 @@ import { Tune } from '@mui/icons-material';
 import { errorHandler } from '@/lib/errorHandler';
 import axios from 'axios';
 import ProductSkeleton from '@/components/productSkeleton';
-import { useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 export default function Products() {
   const [filterOpen, setFilterOpen] = useState(false);
-  const params = useSearchParams()
-  const InitialParams = new URLSearchParams();
-  InitialParams.append(params.get('field') || '', params.get('value') || '')
-  const [queryString, setQueryString] = useState(InitialParams.toString());
+  const [queryString, setQueryString] = useState('');
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<IProduct[]>([]);
   const [count, setCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Retrieve and decode the URL parameter for fragrance family
+  const { name: nameParam } = useParams();
+  const name = decodeURIComponent((nameParam as string) || '');
+
   const LIMIT = 8;
   const pageCount = Math.ceil(count / LIMIT) || 1;
 
-  const title = params.get('title') || 'All Fragrance & Perfume'
-
-  // Reset current page whenever queryString changes
+  // Reset the current page when the query changes
   useEffect(() => {
     setCurrentPage(1);
   }, [queryString]);
 
-  // Compute filtersCount based solely on queryString changes
+  // Calculate the number of active filters from the query string
   const filtersCount = useMemo(() => {
-    const params = new URLSearchParams(queryString);
+    const searchParams = new URLSearchParams(queryString);
     let count = 0;
-    if (params.get('minPrice')) count++;
-    if (params.get('maxPrice')) count++;
-    ['brands', 'concentration', 'fragranceFamily', 'gender', 'size'].forEach(
-      (key) => {
-        const value = params.get(key);
-        if (value) {
-          count += value.split(',').filter(Boolean).length;
-        }
-      },
-    );
+    if (searchParams.get('minPrice')) count++;
+    if (searchParams.get('maxPrice')) count++;
+    ['brands', 'concentration', 'fragranceFamily', 'gender', 'size'].forEach((key) => {
+      const value = searchParams.get(key);
+      if (value) {
+        count += value.split(',').filter(Boolean).length;
+      }
+    });
     return count;
   }, [queryString]);
 
-  // Fetch products based on current query and page
+  // Fetch products based on the current page, query, and fragrance family
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const url = `/api/products?limit=${LIMIT}&page=${currentPage}&${queryString}`;
+      const fragranceFamily = encodeURIComponent(name);
+      const url = `/api/products?limit=${LIMIT}&page=${currentPage}&fragranceFamily=${fragranceFamily}&${queryString}`;
       const { data } = await axios.get(url);
-      const { products, totalCount } = data;
-      setProducts(products);
-      setCount(totalCount);
-    } catch (e) {
-      console.error(errorHandler(e));
+      setProducts(data.products);
+      setCount(data.totalCount);
+    } catch (error) {
+      console.error(errorHandler(error));
     } finally {
       setLoading(false);
     }
-  }, [queryString, currentPage]);
+  }, [queryString, currentPage, name]);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
-  const changePage = (e: ChangeEvent<unknown>, value: number) => {
-    setCurrentPage(value);
-  };
+  const handlePageChange = useCallback(
+    (event: ChangeEvent<unknown>, page: number) => {
+      setCurrentPage(page);
+    },
+    []
+  );
 
   return (
     <Stack p={{ xs: 1, sm: 4 }} spacing={2}>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
-        <Typography variant='h6'>{title}</Typography>
-        <Typography variant='body2'>{count} products</Typography>
-
+          <Typography variant="h6">Fragrance Family - {name}</Typography>
+          <Typography variant="body2">{count} products</Typography>
         </Box>
-        <Button
-          variant='contained'
-          endIcon={<Tune />}
-          onClick={() => setFilterOpen(true)}
-        >
+        <Button variant="contained" endIcon={<Tune />} onClick={() => setFilterOpen(true)}>
           Filter
         </Button>
       </Box>
@@ -130,20 +112,13 @@ export default function Products() {
           ))}
         </Grid2>
       ) : (
-        <Typography variant='h6' align='center'>
+        <Typography variant="h6" align="center">
           No results found
         </Typography>
       )}
 
-      <Box
-        sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-      >
-        <Pagination
-          count={pageCount}
-          page={currentPage}
-          shape='rounded'
-          onChange={changePage}
-        />
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Pagination count={pageCount} page={currentPage} shape="rounded" onChange={handlePageChange} />
       </Box>
     </Stack>
   );

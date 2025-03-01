@@ -15,8 +15,7 @@ export async function GET(
     }
 
     const product = await Product.findById(id)
-      .populate('tags')
-      .populate('category');
+      .populate('brand');
     if (!product) {
       return NextResponse.json(
         { message: 'Product not found' },

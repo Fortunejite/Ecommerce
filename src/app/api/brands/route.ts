@@ -1,11 +1,11 @@
 import { auth } from '@/auth';
-import Tag from '@/models/Tag.model';
+import Brand from '@/models/Brand.model';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const tags = await Tag.find();
-    return NextResponse.json(tags);
+    const brands = await Brand.find().sort({name: 1});
+    return NextResponse.json(brands);
   } catch (e) {
     console.log(e);
     return NextResponse.json({}, { status: 500 });
@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
         { message: 'Insufficient Permission' },
         { status: 403 },
       );
-    const tag = new Tag({ name: body });
-    await tag.save();
+    const brand = new Brand({ name: body });
+    await brand.save();
     return NextResponse.json({ message: 'Success' });
   } catch (e) {
     console.log(e);

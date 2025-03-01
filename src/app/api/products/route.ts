@@ -2,47 +2,71 @@ import { handleMongooseError } from '@/lib/errorHandler';
 import Product from '@/models/Product.model';
 import { SortOrder } from 'mongoose';
 import { NextRequest, NextResponse } from 'next/server';
+
 export async function GET(request: NextRequest) {
   try {
-    // pagination
-    const page = Number(request.nextUrl.searchParams.get('page')) || 1;
-    const limit = Number(request.nextUrl.searchParams.get('limit')) || 10;
+    const { searchParams } = request.nextUrl;
 
-    // filter
-    const name = request.nextUrl.searchParams.get('name');
-    const tags = request.nextUrl.searchParams.get('tags');
-    const category = request.nextUrl.searchParams.get('category');
-    const minPrice = request.nextUrl.searchParams.get('minPrice');
-    const maxPrice = request.nextUrl.searchParams.get('maxPrice');
-    const rating = Number(request.nextUrl.searchParams.get('ratings'));
-
+    // Pagination
+    const page = Number(searchParams.get('page')) || 1;
+    const limit = Number(searchParams.get('limit')) || 10;
     const skip = (page - 1) * limit;
-    const query = {
-      ...(name && { name }),
-      ...(tags && { tags: { $in: tags.split(',') } }),
-      ...(category && { category: { $in: category.split(',') } }),
-      ...(minPrice && { price: { $gte: minPrice } }),
-      ...(maxPrice && { price: { $lte: maxPrice } }),
-      ...(rating && { rating: { $gte: rating } }),
-    };
-    const sort = {
-      ...(rating && { rating: -1 }),
-      ...((minPrice || maxPrice) && { price: -1 }),
-      createdAt: -1,
-    } as { [key: string]: SortOrder };
 
+    // Filters
+    const name = searchParams.get('name');
+    const brands = searchParams.get('brands');
+    const concentration = searchParams.get('concentration');
+    const fragranceFamily = searchParams.get('fragranceFamily');
+    const gender = searchParams.get('gender');
+    const size = searchParams.get('size');
+    const minPrice = searchParams.get('minPrice');
+    const maxPrice = searchParams.get('maxPrice');
+
+    // Build a price filter object if needed
+    const priceQuery: Record<string, number> = {};
+    if (minPrice) priceQuery.$gte = Number(minPrice);
+    if (maxPrice) priceQuery.$lte = Number(maxPrice);
+
+    // Construct the filter query
+    const query: Record<string, any> = {
+      ...(name && { name }),
+      ...(brands && { brand: { $in: brands.split(',') } }),
+      ...(concentration && {
+        concentration: { $in: concentration.split(',') },
+      }),
+      ...(fragranceFamily && {
+        fragranceFamily: { $in: fragranceFamily.split(',') },
+      }),
+      ...(gender && { gender: { $in: gender.split(',') } }),
+      ...(size && { size: { $in: size.split(',') } }),
+      ...(Object.keys(priceQuery).length && { price: priceQuery }),
+    };
+
+    
+    // Sorting: map sort query to schema attribute
+    const sort = searchParams.get('sort');
+    const order = searchParams.get('order') || 'asc';
+    const sortMap: Record<string, string> = {
+      alpha: 'name',
+      price: 'price',
+      date: 'createdAt',
+    };
+    const sortAttribute = sortMap[sort || ''] || 'sales';
+    const sortQuery = { [sortAttribute]: order as SortOrder };
+
+    // Execute query and count in parallel
     const [products, totalCount] = await Promise.all([
       Product.find(query)
-        .sort(sort)
+        .sort(sortQuery)
         .skip(skip)
         .limit(limit)
-        .populate('tags')
-        .populate('category'),
-      Product.countDocuments(query).exec(),
+        .populate('brand'),
+      Product.countDocuments(query),
     ]);
+
     return NextResponse.json({ products, totalCount });
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.error(error);
     return NextResponse.json({}, { status: 500 });
   }
 }

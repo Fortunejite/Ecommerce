@@ -12,6 +12,9 @@ import {
   ShoppingBag,
   Logout,
   SupervisorAccount,
+  KeyboardArrowRight,
+  ArrowBack as ArrowBackIcon,
+  Search as SearchIcon,
 } from '@mui/icons-material';
 import {
   AppBar,
@@ -20,6 +23,7 @@ import {
   Box,
   FormControlLabel,
   IconButton,
+  InputAdornment,
   List,
   ListItem,
   ListItemButton,
@@ -27,16 +31,20 @@ import {
   ListItemText,
   Menu,
   MenuItem,
+  Slide,
   Stack,
   styled,
   SwipeableDrawer,
   Switch,
+  TextField,
   Toolbar,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   useCallback,
   useEffect,
@@ -48,9 +56,9 @@ import {
 
 import { useAppDispatch, useAppSelector } from '@/hooks/redux.hook';
 import { fetchFavourite } from '@/redux/favouriteSlice';
-import { fetchCategories } from '@/redux/categorySlice';
-import { fetchTags } from '@/redux/tagSlice';
 import { fetchCart } from '@/redux/cartSlice';
+import { fetchBrands } from '@/redux/brandSlice';
+import { FraganceFamily } from '@/lib/perfumeDetails';
 
 interface NavbarProps {
   mode: 'light' | 'dark';
@@ -63,12 +71,21 @@ interface DrawerProps extends NavbarProps {
   isAdmin: boolean;
 }
 
-const navigations = [
-  { name: 'Home', url: '/', icon: <Home /> },
-  { name: 'Contact', url: '/contact', icon: <Details /> },
-  { name: 'About', url: '/about', icon: <Info /> },
-  { name: 'Signup', url: '/signup', icon: <Login /> },
-];
+const parseStringToParams = ({
+  title,
+  value,
+  field,
+}: {
+  title: string;
+  value: string;
+  field: string;
+}) => {
+  const params = new URLSearchParams();
+  params.append('field', field);
+  params.append('value', value);
+  params.append('title', title);
+  return params.toString();
+};
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: 'flex',
@@ -90,6 +107,7 @@ const Links = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: 16,
+  position: 'relative', // for absolute positioning of the results box in desktop
   [theme.breakpoints.down('sm')]: {
     display: 'none',
   },
@@ -155,8 +173,14 @@ const ModeSwitch = styled(Switch)(({ theme }) => ({
   },
 }));
 
-const Drawer = ({ open, setOpen, mode, setMode, isAdmin }: DrawerProps) => {
-  // Toggle dark/light mode
+// Drawer component with nested view and right arrow for items with children.
+const DrawerComponent = ({
+  open,
+  setOpen,
+  mode,
+  setMode,
+  isAdmin,
+}: DrawerProps) => {
   const handleModeToggle = useCallback(() => {
     setMode((prev) => {
       const nextMode = prev === 'light' ? 'dark' : 'light';
@@ -165,32 +189,88 @@ const Drawer = ({ open, setOpen, mode, setMode, isAdmin }: DrawerProps) => {
     });
   }, [setMode]);
 
+  const router = useRouter();
+  const { brands } = useAppSelector((state) => state.brand);
+
+  // The items variable uses nested children.
+  const items = [
+    { name: 'All Perfume', url: '/products' },
+    {
+      name: 'All brands',
+      children: brands.map((brand) => ({
+        name: brand.name,
+        url: `/collections/brands/${brand.name}`,
+      })),
+    },
+    {
+      name: 'Find your fragrance',
+      children: FraganceFamily.map((fragrance) => ({
+        name: fragrance,
+        url: `/collections/fragrance-family/${fragrance}`,
+      })),
+    },
+    {
+      name: 'New fragrance',
+      url: `/collections?${parseStringToParams({
+        title: 'New fragrance',
+        field: 'sort',
+        value: 'date',
+      })}`,
+    },
+    {
+      name: 'Best selling',
+      url: `/collections?${parseStringToParams({
+        title: 'Best selling',
+        field: 'sales',
+        value: 'desc',
+      })}`,
+    },
+  ];
+
+  // State for handling the nested (child) view.
+  const [nestedItems, setNestedItems] = useState<
+    { name: string; url: string }[] | null
+  >(null);
+  const [nestedTitle, setNestedTitle] = useState('');
+
+  const handleParentClick = (item: any) => {
+    if (item.children) {
+      setNestedItems(item.children);
+      setNestedTitle(item.name);
+    } else {
+      setOpen(false);
+      router.push(item.url);
+    }
+  };
+
   return (
     <SwipeableDrawer
       anchor='left'
       open={open}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
-      sx={{ display: { xs: 'block', sm: 'none' } }}
+      PaperProps={{
+        sx: {
+          top: '64px', // adjust to your Navbar height
+          height: 'calc(100% - 64px)',
+        },
+      }}
     >
-      <Box width={250}>
+      <Box
+        width={250}
+        position='relative'
+        height='100%'
+        bgcolor='background.default'
+      >
         <List>
-          {navigations.map(({ name, icon, url }) => (
-            <ListItem key={url} disablePadding onClick={() => setOpen(false)}>
-              <ListItemButton component={Link} href={url}>
-                <ListItemIcon>{icon}</ListItemIcon>
-                <ListItemText primary={name} />
+          {items.map((item) => (
+            <ListItem key={item.name} disablePadding>
+              <ListItemButton onClick={() => handleParentClick(item)}>
+                <ListItemText primary={item.name} />
+                {item.children && <KeyboardArrowRight />}
               </ListItemButton>
             </ListItem>
           ))}
-          {isAdmin && (
-            <ListItem disablePadding onClick={() => setOpen(false)}>
-              <ListItemButton component={Link} href={'/admin'}>
-                <ListItemIcon>{<SupervisorAccount />}</ListItemIcon>
-                <ListItemText primary={'Admin'} />
-              </ListItemButton>
-            </ListItem>
-          )}
           <ListItem>
             <FormControlLabel
               control={
@@ -204,16 +284,60 @@ const Drawer = ({ open, setOpen, mode, setMode, isAdmin }: DrawerProps) => {
             />
           </ListItem>
         </List>
+
+        {/* Nested view overlay with slide animation */}
+        <Slide
+          direction='left'
+          in={Boolean(nestedItems)}
+          mountOnEnter
+          unmountOnExit
+        >
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: 250,
+              height: '100%',
+              backgroundColor: 'background.default',
+              zIndex: 10,
+              boxShadow: 3,
+            }}
+          >
+            <List>
+              <ListItem disablePadding>
+                <ListItemButton onClick={() => setNestedItems(null)}>
+                  <ListItemIcon>
+                    <ArrowBackIcon />
+                  </ListItemIcon>
+                  <ListItemText primary={nestedTitle} />
+                </ListItemButton>
+              </ListItem>
+              {nestedItems?.map((child) => (
+                <ListItem
+                  key={child.name}
+                  disablePadding
+                  onClick={() => setOpen(false)}
+                >
+                  <ListItemButton component={Link} href={child.url}>
+                    <ListItemText primary={child.name} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        </Slide>
       </Box>
     </SwipeableDrawer>
   );
 };
 
+// Navbar component with search area behavior.
 const Navbar = ({ mode, setMode }: NavbarProps) => {
   const { data: session, status: sessionStatus } = useSession();
   const pathname = usePathname();
   const dispatch = useAppDispatch();
-  const [open, setOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
   const { status: favStatus, products: favorites } = useAppSelector(
@@ -224,7 +348,9 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
   );
   const user = session?.user;
 
-  // Memoized toggle for mode (used in both desktop and drawer)
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const toggleMode = useCallback(() => {
     setMode((prev) => {
       const nextMode = prev === 'light' ? 'dark' : 'light';
@@ -233,7 +359,28 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
     });
   }, [setMode]);
 
-  // Fetch user favourites, cart, categories, and tags when available
+  // Search state (used for both desktop and mobile)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<string[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  // For mobile: when the search icon is clicked, show a full-screen search overlay.
+  const [mobileSearchActive, setMobileSearchActive] = useState(false);
+
+  // Dummy search results logic: filter a dummy list by searchQuery.
+  const dummyData = ['Red Roses', 'Blue Ocean', 'Green Forest', 'Yellow Sun'];
+  useEffect(() => {
+    if (searchQuery.trim().length > 0) {
+      const results = dummyData.filter((item) =>
+        item.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+      setSearchResults(results);
+      setShowSearchResults(true);
+    } else {
+      setShowSearchResults(false);
+      setSearchResults([]);
+    }
+  }, [searchQuery]);
+
   useEffect(() => {
     if (sessionStatus !== 'unauthenticated' && favStatus === 'idle') {
       dispatch(fetchFavourite());
@@ -244,8 +391,7 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
   }, [dispatch, sessionStatus, favStatus, cartStatus]);
 
   useEffect(() => {
-    dispatch(fetchCategories());
-    dispatch(fetchTags());
+    dispatch(fetchBrands());
   }, [dispatch]);
 
   const handleMenuOpen = useCallback((e: MouseEvent<HTMLElement>) => {
@@ -261,51 +407,86 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
       <StyledToolbar>
         <Stack direction='row' gap={1}>
           <IconButton
-            onClick={() => setOpen(true)}
-            sx={{
-              display: { xs: 'flex', sm: 'none' },
-              alignItems: 'center',
-              p: 0,
-            }}
+            onClick={() => setDrawerOpen(true)}
+            sx={{ alignItems: 'center', p: 0 }}
             aria-label='Open navigation menu'
           >
             <MenuIcon />
           </IconButton>
-          <Drawer
-            open={open}
-            setOpen={setOpen}
+          <DrawerComponent
+            open={drawerOpen}
+            setOpen={setDrawerOpen}
             mode={mode}
             setMode={setMode}
             isAdmin={user?.isAdmin || false}
           />
           <Typography variant='h6'>Exclusive</Typography>
         </Stack>
-        <Links>
-          {navigations.map(({ name, url }) => (
-            <Link key={url} href={url} passHref>
-              {url === pathname ? (
-                <ActiveLink variant='body1'>{name}</ActiveLink>
-              ) : (
-                <Typography variant='body1' component='h6'>
-                  {name}
-                </Typography>
-              )}
-            </Link>
-          ))}
-          {user?.isAdmin && (
-            <Link href={'/admin'} passHref>
-              {'/admin' === pathname ? (
-                <ActiveLink variant='body1'>Admin</ActiveLink>
-              ) : (
-                <Typography variant='body1' component='h6'>
-                  Admin
-                </Typography>
-              )}
-            </Link>
-          )}
-          <ModeSwitch checked={mode === 'dark'} onChange={toggleMode} />
-        </Links>
+        {/* Desktop Search Area */}
+        {!isMobile && (
+          <Box
+            sx={{
+              position: 'relative',
+              backgroundColor: 'background.paper',
+              borderRadius: 1,
+              width: '50%',
+            }}
+          >
+            <TextField
+              placeholder='Search...'
+              variant='outlined'
+              size='small'
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setShowSearchResults(true)}
+              sx={{
+                backgroundColor: 'background.paper',
+                borderRadius: 1,
+                width: '100%',
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position='start'>
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            {showSearchResults && searchResults.length > 0 && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  width: '100%',
+                  bgcolor: 'background.paper',
+                  boxShadow: 3,
+                  zIndex: 100,
+                  mt: 1,
+                  borderRadius: 1,
+                  p: 1,
+                }}
+              >
+                {searchResults.map((result, idx) => (
+                  <Typography key={idx} variant='body2' sx={{ py: 1 }}>
+                    {result}
+                  </Typography>
+                ))}
+              </Box>
+            )}
+          </Box>
+        )}
+        {/* Mobile: Show only search icon */}
         <Actions>
+          {isMobile && (
+            <IconButton
+              sx={{ px: 0 }}
+              onClick={() => setMobileSearchActive(true)}
+              color='inherit'
+            >
+              <SearchIcon />
+            </IconButton>
+          )}
           <Link href='/favourite' passHref>
             <Badge badgeContent={favorites.length} color='primary'>
               <FavoriteBorderOutlined />
@@ -316,6 +497,13 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
               <ShoppingCartOutlined />
             </Badge>
           </Link>
+          {user?.isAdmin && (
+            <IconButton component={Link} href='/admin' sx={{
+              p: 0
+            }}>
+              <SupervisorAccount />
+            </IconButton>
+          )}
           {user && (
             <Avatar
               onClick={handleMenuOpen}
@@ -354,6 +542,52 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
           </Menu>
         </Actions>
       </StyledToolbar>
+      {/* Mobile Search Overlay */}
+      {isMobile && mobileSearchActive && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '64px', // adjust based on your navbar height
+            left: 0,
+            right: 0,
+            bgcolor: 'background.paper',
+            zIndex: 200,
+            p: 2,
+            height: 'calc(100vh - 64px)',
+            overflowY: 'auto',
+          }}
+        >
+          <Stack direction='row' alignItems='center' spacing={1} mb={2}>
+            <IconButton onClick={() => setMobileSearchActive(false)}>
+              <ArrowBackIcon />
+            </IconButton>
+            <TextField
+              fullWidth
+              placeholder='Search...'
+              variant='outlined'
+              size='small'
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position='start'>
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Stack>
+          {searchQuery && searchResults.length > 0 && (
+            <Box>
+              {searchResults.map((result, idx) => (
+                <Typography key={idx} variant='body2' sx={{ py: 1 }}>
+                  {result}
+                </Typography>
+              ))}
+            </Box>
+          )}
+        </Box>
+      )}
     </AppBar>
   );
 };

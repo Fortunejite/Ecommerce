@@ -2,7 +2,7 @@
 
 import { useAppSelector } from '@/hooks/redux.hook';
 import { errorHandler } from '@/lib/errorHandler';
-import { Concentrations, FraganceFamily } from '@/lib/perfumeDetails';
+import { Concentrations } from '@/lib/perfumeDetails';
 import { IBrand } from '@/models/Brand.model';
 import { IProduct } from '@/models/Product.model';
 import { Close, ExpandMore, Remove } from '@mui/icons-material';
@@ -23,14 +23,13 @@ import {
   Typography,
 } from '@mui/material';
 import axios from 'axios';
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent, useCallback, useState } from 'react';
 import MuiAccordion from '@mui/material/Accordion';
 
 interface IFilters {
   availability?: boolean;
   brands: IBrand['_id'][];
   concentration: string[];
-  fragranceFamily: string[];
   gender: string[];
   size: number[];
   minPrice: number;
@@ -59,6 +58,15 @@ const StyledAccordionDetails = styled(AccordionDetails)({
   gap: 1,
 });
 
+const initialFilters: IFilters = {
+  brands: [],
+  concentration: [],
+  gender: [],
+  size: [],
+  minPrice: 0,
+  maxPrice: 0,
+};
+
 const FilterDrawer = ({
   open,
   setOpen,
@@ -68,60 +76,45 @@ const FilterDrawer = ({
   setLoading,
   filtersCount,
 }: DrawerProps) => {
-  const [filters, setFilters] = useState<IFilters>({
-    brands: [],
-    concentration: [],
-    fragranceFamily: [],
-    gender: [],
-    size: [],
-    minPrice: 0,
-    maxPrice: 0,
-  });
+  const [filters, setFilters] = useState<IFilters>(initialFilters);
   const { brands } = useAppSelector((state) => state.brand);
   const LIMIT = 8;
 
-  // Generic toggle function for array-based filters
-  const toggleFilterItem = <K extends keyof IFilters>(
-    field: K,
-    value: IFilters[K] extends Array<infer U> ? U : never,
-  ) => {
-    setFilters((prev) => {
-      const current = prev[field] as unknown as any[];
-      return {
-        ...prev,
-        [field]: current.includes(value)
-          ? (current.filter((item) => item !== value) as IFilters[K])
-          : ([...current, value] as IFilters[K]),
-      };
-    });
-  };
+  // Memoized toggle function for array-based filters
+  const toggleFilterItem = useCallback(
+    <K extends keyof IFilters>(
+      field: K,
+      value: IFilters[K] extends Array<infer U> ? U : never,
+    ) => {
+      setFilters((prev) => {
+        const current = prev[field] as unknown as any[];
+        const updated = current.includes(value)
+          ? current.filter((item) => item !== value)
+          : [...current, value];
+        return { ...prev, [field]: updated as IFilters[K] };
+      });
+    },
+    [],
+  );
 
-  // Combined handler for min and max price changes
-  const handlePriceChange =
+  // Memoized handler for min and max price changes
+  const handlePriceChange = useCallback(
     (field: 'minPrice' | 'maxPrice') => (e: ChangeEvent<HTMLInputElement>) => {
       setFilters((prev) => ({ ...prev, [field]: Number(e.target.value) || 0 }));
-    };
+    },
+    [],
+  );
 
-  const applyFilters = async () => {
-    const {
-      minPrice,
-      maxPrice,
-      brands,
-      concentration,
-      fragranceFamily,
-      gender,
-      size,
-    } = filters;
+  // Apply filters by building a query string and fetching products
+  const applyFilters = useCallback(async () => {
+    const { minPrice, maxPrice, brands, concentration, gender, size } = filters;
     const params = new URLSearchParams();
     setOpen(false);
 
     if (minPrice > 0) params.append('minPrice', minPrice.toString());
     if (maxPrice > 0) params.append('maxPrice', maxPrice.toString());
     if (brands.length) params.append('brands', brands.join(','));
-    if (concentration.length)
-      params.append('concentration', concentration.join(','));
-    if (fragranceFamily.length)
-      params.append('fragranceFamily', fragranceFamily.join(','));
+    if (concentration.length) params.append('concentration', concentration.join(','));
     if (gender.length) params.append('gender', gender.join(','));
     if (size.length) params.append('size', size.join(','));
     params.append('limit', LIMIT.toString());
@@ -131,8 +124,8 @@ const FilterDrawer = ({
 
     try {
       setLoading(true);
-      const res = await axios.get(`/api/products?${queryString}`);
-      const { products, totalCount } = res.data;
+      const { data } = await axios.get(`/api/products?${queryString}`);
+      const { products, totalCount } = data;
       setProducts(products);
       setCount(totalCount);
     } catch (e) {
@@ -140,25 +133,17 @@ const FilterDrawer = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, LIMIT, setCount, setLoading, setOpen, setProducts, setQueryString]);
 
-  const resetFilters = async () => {
+  // Reset filters to the initial state and reload products
+  const resetFilters = useCallback(async () => {
     try {
       setLoading(true);
       setOpen(false);
-      setFilters({
-        // availability: true,
-        brands: [],
-        concentration: [],
-        fragranceFamily: [],
-        gender: [],
-        size: [],
-        minPrice: 0,
-        maxPrice: 0,
-      });
+      setFilters(initialFilters);
       setQueryString('');
-      const res = await axios.get(`/api/products?limit=${LIMIT}`);
-      const { products, totalCount } = res.data;
+      const { data } = await axios.get(`/api/products?limit=${LIMIT}`);
+      const { products, totalCount } = data;
       setProducts(products);
       setCount(totalCount);
     } catch (e) {
@@ -166,20 +151,16 @@ const FilterDrawer = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [LIMIT, setCount, setLoading, setOpen, setProducts, setQueryString]);
 
   return (
     <SwipeableDrawer
-      anchor='right'
+      anchor="right"
       open={open}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
     >
-      <Stack
-        width={{ xs: '100vw', sm: 350 }}
-        bgcolor='background.default'
-        minHeight='100vh'
-      >
+      <Stack width={{ xs: '100vw', sm: 350 }} bgcolor="background.default" minHeight="100vh">
         <Box
           sx={{
             position: 'sticky',
@@ -195,14 +176,12 @@ const FilterDrawer = ({
           <IconButton onClick={() => setOpen(false)}>
             <Close />
           </IconButton>
-          <Typography>
-            Filters{filtersCount > 0 && `(${filtersCount})`}
-          </Typography>
+          <Typography>Filters{filtersCount > 0 && `(${filtersCount})`}</Typography>
         </Box>
 
         <StyledAccordion>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant='h6'>Brands</Typography>
+            <Typography variant="h6">Brands</Typography>
           </AccordionSummary>
           <StyledAccordionDetails>
             {brands.map((brand) => (
@@ -222,7 +201,7 @@ const FilterDrawer = ({
 
         <StyledAccordion>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant='h6'>Concentrations</Typography>
+            <Typography variant="h6">Concentrations</Typography>
           </AccordionSummary>
           <StyledAccordionDetails>
             {Concentrations.map((conc) => (
@@ -242,27 +221,7 @@ const FilterDrawer = ({
 
         <StyledAccordion>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant='h6'>Fragrance Family</Typography>
-          </AccordionSummary>
-          <StyledAccordionDetails>
-            {FraganceFamily.map((frag) => (
-              <FormControlLabel
-                key={frag}
-                label={frag}
-                control={
-                  <Checkbox
-                    checked={filters.fragranceFamily.includes(frag)}
-                    onChange={() => toggleFilterItem('fragranceFamily', frag)}
-                  />
-                }
-              />
-            ))}
-          </StyledAccordionDetails>
-        </StyledAccordion>
-
-        <StyledAccordion>
-          <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant='h6'>Gender</Typography>
+            <Typography variant="h6">Gender</Typography>
           </AccordionSummary>
           <StyledAccordionDetails>
             {['Men', 'Women', 'Unisex'].map((gen) => (
@@ -282,36 +241,32 @@ const FilterDrawer = ({
 
         <StyledAccordion>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant='h6'>Price</Typography>
+            <Typography variant="h6">Price</Typography>
           </AccordionSummary>
           <StyledAccordionDetails>
             <Stack
-              direction='row'
+              direction="row"
               gap={1}
-              justifyContent='space-between'
-              alignItems='center'
+              justifyContent="space-between"
+              alignItems="center"
             >
               <TextField
-                size='small'
+                size="small"
                 value={filters.minPrice}
                 onChange={handlePriceChange('minPrice')}
-                type='number'
+                type="number"
                 InputProps={{
-                  startAdornment: (
-                    <InputAdornment position='start'>₦</InputAdornment>
-                  ),
+                  startAdornment: <InputAdornment position="start">₦</InputAdornment>,
                 }}
               />
               <Remove />
               <TextField
-                size='small'
+                size="small"
                 value={filters.maxPrice}
                 onChange={handlePriceChange('maxPrice')}
-                type='number'
+                type="number"
                 InputProps={{
-                  startAdornment: (
-                    <InputAdornment position='start'>₦</InputAdornment>
-                  ),
+                  startAdornment: <InputAdornment position="start">₦</InputAdornment>,
                 }}
               />
             </Stack>
@@ -327,16 +282,14 @@ const FilterDrawer = ({
             backgroundColor: 'background.default',
           }}
         >
-          <Button sx={{ width: '50%' }} onClick={resetFilters}>
-            Reset
-          </Button>
-          <Button
-            sx={{ width: '50%' }}
-            variant='contained'
-            onClick={applyFilters}
-          >
-            Apply
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button sx={{ flex: 1 }} onClick={resetFilters}>
+              Reset
+            </Button>
+            <Button sx={{ flex: 1 }} variant="contained" onClick={applyFilters}>
+              Apply
+            </Button>
+          </Stack>
         </Box>
       </Stack>
     </SwipeableDrawer>
