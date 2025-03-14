@@ -1,4 +1,3 @@
-import { handleMongooseError } from '@/lib/errorHandler';
 import Product from '@/models/Product.model';
 import { SortOrder } from 'mongoose';
 import { NextRequest, NextResponse } from 'next/server';
@@ -28,7 +27,7 @@ export async function GET(request: NextRequest) {
     if (maxPrice) priceQuery.$lte = Number(maxPrice);
 
     // Construct the filter query
-    const query: Record<string, any> = {
+    const query = {
       ...(name && { name }),
       ...(brands && { brand: { $in: brands.split(',') } }),
       ...(concentration && {
@@ -42,7 +41,6 @@ export async function GET(request: NextRequest) {
       ...(Object.keys(priceQuery).length && { price: priceQuery }),
     };
 
-    
     // Sorting: map sort query to schema attribute
     const sort = searchParams.get('sort');
     const order = searchParams.get('order') || 'asc';
@@ -71,20 +69,3 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
-  const body = await request.json();
-
-  try {
-    const newProduct = new Product(body);
-    await newProduct.save();
-    return NextResponse.json(
-      { message: 'Product created successfully' },
-      { status: 201 },
-    );
-  } catch (e) {
-    return NextResponse.json(
-      { error: handleMongooseError(e as Error) },
-      { status: 400 },
-    );
-  }
-}

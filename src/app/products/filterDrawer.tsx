@@ -86,10 +86,10 @@ const FilterDrawer = ({
     value: IFilters[K] extends Array<infer U> ? U : never,
   ) => {
     setFilters((prev) => {
-      const current = prev[field] as unknown as any[];
+      const current = prev[field] as string[];
       return {
         ...prev,
-        [field]: current.includes(value)
+        [field]: current.includes(value as string)
           ? (current.filter((item) => item !== value) as IFilters[K])
           : ([...current, value] as IFilters[K]),
       };

@@ -2,6 +2,8 @@
 
 import OrderStatus from '@/components/orderStatus';
 import { errorHandler } from '@/lib/errorHandler';
+import { formatDate } from '@/lib/formatDate';
+import { formatNumber } from '@/lib/formatNumber';
 import { IOrder } from '@/models/Order.model';
 import { IProduct } from '@/models/Product.model';
 import {
@@ -30,69 +32,94 @@ const OrderElement = ({ order }: { order: IOrder }) => {
   const isMobile = useMediaQuery((theme: Theme) =>
     theme.breakpoints.down('sm'),
   );
-  const { trackingId, status } = order;
-  // Type assertion for cartItems
+  const { trackingId, status, totalAmount, createdAt } = order;
   const cartItems = order.cartItems as unknown as ({
-    product: IProduct;
+    product: IProduct | null;
   } & IOrder['cartItems'][0])[];
 
   return (
-    <>
-      {cartItems.map(({ product, quantity }) => (
-        <Paper key={product._id.toString()} sx={{ mb: 2, p: 1 }}>
-          <Grid2 container spacing={2}>
-            <Grid2 size={{ xs: 3, sm: 2 }} sx={{ position: 'relative' }}>
+    <Paper sx={{ mb: 2, p: 1 }}>
+      <Grid2 container spacing={2}>
+        <Grid2 container size={{ xs: 3, sm: 2 }}>
+          {cartItems.slice(0, 3).map(({ product }, index) => (
+            <Grid2
+              size={6}
+              sx={{ position: 'relative', height: '50px' }}
+              key={index}
+            >
               <Image
-                src={product.mainPic}
-                alt={product.name}
+                src={product?.mainPic || ''}
+                alt={product?.name}
                 fill
                 objectFit='contain'
-                style={{ padding: '4px' }}
               />
             </Grid2>
+          ))}
+          {cartItems.length > 4 ? (
             <Grid2
-              size={{ xs: 9, sm: 8 }}
-              p={1}
-              onClick={
-                isMobile
-                  ? () => router.push(`/orders/${trackingId}`)
-                  : undefined
-              }
-              sx={{ cursor: isMobile ? 'pointer' : 'default' }}
+              size={6}
+              sx={{
+                position: 'relative',
+                height: '50px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(0,0,0,0.1)',
+                borderRadius: 1,
+              }}
             >
-              <Typography variant='subtitle1'>{product.name}</Typography>
-              <Typography variant='body2'>Order {trackingId}</Typography>
-              <OrderStatus status={status} />
-              <Stack direction='row' gap={1} alignItems='center' mt={1}>
-                {product.variation && (
-                  <Typography variant='body2'>
-                    Variation: <strong>{product.variation}</strong>
-                  </Typography>
-                )}
-                {product.volume && (
-                  <Typography variant='body2'>
-                    Volume: <strong>{product.volume}</strong>
-                  </Typography>
-                )}
-              </Stack>
-              <Typography variant='body2' mt={1}>
-                QTY: <strong>{quantity}</strong>
+              <Typography variant='body2' fontWeight='bold'>
+                +{cartItems.length - 3}
               </Typography>
             </Grid2>
-            <Grid2
-              size={2}
-              display={{ xs: 'none', sm: 'flex' }}
-              alignItems='center'
-              justifyContent='center'
-            >
-              <Button onClick={() => router.push(`/orders/${trackingId}`)}>
-                See details
-              </Button>
-            </Grid2>
-          </Grid2>
-        </Paper>
-      ))}
-    </>
+          ) : (
+            cartItems.slice(3, 4).map(({ product }, index) => (
+              <Grid2
+                size={6}
+                sx={{ position: 'relative', height: '50px' }}
+                key={index}
+              >
+                <Image
+                  src={product?.mainPic || ''}
+                  alt={product?.name}
+                  fill
+                  objectFit='contain'
+                />
+              </Grid2>
+            ))
+          )}
+        </Grid2>
+        <Grid2
+          size={{ xs: 9, sm: 8 }}
+          p={1}
+          onClick={
+            isMobile
+              ? () => router.push(`/admin/orders/${trackingId}`)
+              : undefined
+          }
+          sx={{ cursor: isMobile ? 'pointer' : 'default' }}
+        >
+          <Typography variant='body1'>Tracking ID {trackingId}</Typography>
+          <Typography variant='body1'>
+            Total Amount: ₦{formatNumber(totalAmount)}
+          </Typography>
+          <Typography variant='body1'>
+            Order placed on: {formatDate(new Date(createdAt))}
+          </Typography>
+          <OrderStatus status={status} />
+        </Grid2>
+        <Grid2
+          size={2}
+          display={{ xs: 'none', sm: 'flex' }}
+          alignItems='center'
+          justifyContent='center'
+        >
+          <Button onClick={() => router.push(`/admin/orders/${trackingId}`)}>
+            See details
+          </Button>
+        </Grid2>
+      </Grid2>
+    </Paper>
   );
 };
 
@@ -147,7 +174,7 @@ const Orders = () => {
 
   const LIMIT = 10;
   const pageCount = Math.ceil(count / LIMIT) || 1;
-  const BASE_URL = `/api/orders?limit=${LIMIT}`;
+  const BASE_URL = `/api/admin/orders?limit=${LIMIT}`;
 
   // Redirect if unauthenticated
   useEffect(() => {
@@ -214,7 +241,7 @@ const Orders = () => {
   return (
     <Stack gap={2} p={{ xs: 1, sm: 4 }}>
       <Breadcrumbs>
-        <Link href='/'>Admin</Link>
+        <Link href='/admin'>Admin</Link>
         <Typography>Manage Orders</Typography>
       </Breadcrumbs>
 
@@ -277,7 +304,7 @@ const Orders = () => {
           }}
         >
           <Typography textAlign='center' variant='h6'>
-            No order is available
+            No order is available. Enjoy your day
           </Typography>
           <Button
             variant='contained'

@@ -12,7 +12,7 @@ const theme = (mode: PaletteMode) =>
       },
       secondary: {
         main: mode === 'light' ? '#F5F5F5' : '#1e1e1e',
-        dark: '#E65100',
+        dark: mode === 'dark' ? '#F5F5F5' : '#1e1e1e',
         contrastText: mode === 'light' ? '#212121' : '#FFFFFF',
       },
       background: {

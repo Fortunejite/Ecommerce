@@ -87,8 +87,8 @@ const FilterDrawer = ({
       value: IFilters[K] extends Array<infer U> ? U : never,
     ) => {
       setFilters((prev) => {
-        const current = prev[field] as unknown as any[];
-        const updated = current.includes(value)
+        const current = prev[field] as string[];
+        const updated = current.includes(value as string)
           ? current.filter((item) => item !== value)
           : [...current, value];
         return { ...prev, [field]: updated as IFilters[K] };
@@ -114,7 +114,8 @@ const FilterDrawer = ({
     if (minPrice > 0) params.append('minPrice', minPrice.toString());
     if (maxPrice > 0) params.append('maxPrice', maxPrice.toString());
     if (brands.length) params.append('brands', brands.join(','));
-    if (concentration.length) params.append('concentration', concentration.join(','));
+    if (concentration.length)
+      params.append('concentration', concentration.join(','));
     if (gender.length) params.append('gender', gender.join(','));
     if (size.length) params.append('size', size.join(','));
     params.append('limit', LIMIT.toString());
@@ -133,7 +134,15 @@ const FilterDrawer = ({
     } finally {
       setLoading(false);
     }
-  }, [filters, LIMIT, setCount, setLoading, setOpen, setProducts, setQueryString]);
+  }, [
+    filters,
+    LIMIT,
+    setCount,
+    setLoading,
+    setOpen,
+    setProducts,
+    setQueryString,
+  ]);
 
   // Reset filters to the initial state and reload products
   const resetFilters = useCallback(async () => {
@@ -155,12 +164,16 @@ const FilterDrawer = ({
 
   return (
     <SwipeableDrawer
-      anchor="right"
+      anchor='right'
       open={open}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
     >
-      <Stack width={{ xs: '100vw', sm: 350 }} bgcolor="background.default" minHeight="100vh">
+      <Stack
+        width={{ xs: '100vw', sm: 350 }}
+        bgcolor='background.default'
+        minHeight='100vh'
+      >
         <Box
           sx={{
             position: 'sticky',
@@ -176,12 +189,14 @@ const FilterDrawer = ({
           <IconButton onClick={() => setOpen(false)}>
             <Close />
           </IconButton>
-          <Typography>Filters{filtersCount > 0 && `(${filtersCount})`}</Typography>
+          <Typography>
+            Filters{filtersCount > 0 && `(${filtersCount})`}
+          </Typography>
         </Box>
 
         <StyledAccordion>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="h6">Brands</Typography>
+            <Typography variant='h6'>Brands</Typography>
           </AccordionSummary>
           <StyledAccordionDetails>
             {brands.map((brand) => (
@@ -201,7 +216,7 @@ const FilterDrawer = ({
 
         <StyledAccordion>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="h6">Concentrations</Typography>
+            <Typography variant='h6'>Concentrations</Typography>
           </AccordionSummary>
           <StyledAccordionDetails>
             {Concentrations.map((conc) => (
@@ -221,7 +236,7 @@ const FilterDrawer = ({
 
         <StyledAccordion>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="h6">Gender</Typography>
+            <Typography variant='h6'>Gender</Typography>
           </AccordionSummary>
           <StyledAccordionDetails>
             {['Men', 'Women', 'Unisex'].map((gen) => (
@@ -241,32 +256,36 @@ const FilterDrawer = ({
 
         <StyledAccordion>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="h6">Price</Typography>
+            <Typography variant='h6'>Price</Typography>
           </AccordionSummary>
           <StyledAccordionDetails>
             <Stack
-              direction="row"
+              direction='row'
               gap={1}
-              justifyContent="space-between"
-              alignItems="center"
+              justifyContent='space-between'
+              alignItems='center'
             >
               <TextField
-                size="small"
+                size='small'
                 value={filters.minPrice}
                 onChange={handlePriceChange('minPrice')}
-                type="number"
+                type='number'
                 InputProps={{
-                  startAdornment: <InputAdornment position="start">₦</InputAdornment>,
+                  startAdornment: (
+                    <InputAdornment position='start'>₦</InputAdornment>
+                  ),
                 }}
               />
               <Remove />
               <TextField
-                size="small"
+                size='small'
                 value={filters.maxPrice}
                 onChange={handlePriceChange('maxPrice')}
-                type="number"
+                type='number'
                 InputProps={{
-                  startAdornment: <InputAdornment position="start">₦</InputAdornment>,
+                  startAdornment: (
+                    <InputAdornment position='start'>₦</InputAdornment>
+                  ),
                 }}
               />
             </Stack>
@@ -282,11 +301,11 @@ const FilterDrawer = ({
             backgroundColor: 'background.default',
           }}
         >
-          <Stack direction="row" spacing={1}>
+          <Stack direction='row' spacing={1}>
             <Button sx={{ flex: 1 }} onClick={resetFilters}>
               Reset
             </Button>
-            <Button sx={{ flex: 1 }} variant="contained" onClick={applyFilters}>
+            <Button sx={{ flex: 1 }} variant='contained' onClick={applyFilters}>
               Apply
             </Button>
           </Stack>

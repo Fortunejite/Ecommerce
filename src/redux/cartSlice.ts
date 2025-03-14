@@ -142,7 +142,7 @@ export const selectInCart = (
   productId: IProduct['_id'],
 ) =>
   !!state.cart.items.find(
-    (item) => (item.product as IProduct)._id === productId,
+    (item) => (item.product as IProduct)?._id === productId,
   );
 
 export const { clearCart } = cartSlice.actions;

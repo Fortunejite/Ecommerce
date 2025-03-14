@@ -1,6 +1,5 @@
 'use client';
 
-import { useAppSelector } from '@/hooks/redux.hook';
 import { errorHandler } from '@/lib/errorHandler';
 import { Concentrations, FraganceFamily } from '@/lib/perfumeDetails';
 import { IProduct } from '@/models/Product.model';
@@ -83,8 +82,8 @@ const FilterDrawer = ({
       value: IFilters[K] extends Array<infer U> ? U : never,
     ) => {
       setFilters((prev) => {
-        const current = prev[field] as unknown as any[];
-        const updated = current.includes(value)
+        const current = prev[field] as string[];
+        const updated = current.includes(value as string)
           ? current.filter((item) => item !== value)
           : [...current, value];
         return { ...prev, [field]: updated as IFilters[K] };

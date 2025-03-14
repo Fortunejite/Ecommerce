@@ -2,8 +2,17 @@ import * as React from 'react';
 import Snackbar, { SnackbarCloseReason } from '@mui/material/Snackbar';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
+import { Box } from '@mui/material';
 
-export default function SimpleSnackbar({ message, open, setOpen }: { message: string, open: boolean, setOpen: React.Dispatch<React.SetStateAction<boolean>> }) {
+export default function SimpleSnackbar({
+  message,
+  open,
+  setOpen,
+}: {
+  message: string;
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
   const handleClose = (
     event: React.SyntheticEvent | Event,
     reason?: SnackbarCloseReason,
@@ -18,26 +27,26 @@ export default function SimpleSnackbar({ message, open, setOpen }: { message: st
   const action = (
     <React.Fragment>
       <IconButton
-        size="small"
-        aria-label="close"
-        color="inherit"
+        size='small'
+        aria-label='close'
+        color='inherit'
         onClick={handleClose}
       >
-        <CloseIcon fontSize="small" />
+        <CloseIcon fontSize='small' />
       </IconButton>
     </React.Fragment>
   );
 
   return (
-    <div>
+    <Box>
       <Snackbar
         open={open}
         autoHideDuration={3000}
         onClose={handleClose}
         message={message}
         action={action}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       />
-    </div>
+    </Box>
   );
 }

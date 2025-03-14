@@ -121,7 +121,7 @@ const Login = () => {
         {loading ? 'Logging in...' : 'Login'}
       </Button>
       <Typography variant='body1' align='center' mt={2}>
-        Don't have an account?{' '}
+        Don&apost have an account?{' '}
         <Link href='/signup' style={{ textDecoration: 'underline' }}>
           Signup
         </Link>

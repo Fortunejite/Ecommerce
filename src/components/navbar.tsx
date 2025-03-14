@@ -4,10 +4,6 @@ import {
   FavoriteBorderOutlined,
   ShoppingCartOutlined,
   Menu as MenuIcon,
-  Home,
-  Info,
-  Login,
-  Details,
   Person,
   ShoppingBag,
   Logout,
@@ -44,7 +40,7 @@ import {
 } from '@mui/material';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
   useCallback,
   useEffect,
@@ -68,7 +64,6 @@ interface NavbarProps {
 interface DrawerProps extends NavbarProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  isAdmin: boolean;
 }
 
 const parseStringToParams = ({
@@ -102,20 +97,6 @@ const Actions = styled(Box)({
   alignItems: 'center',
   gap: 16,
 });
-
-const Links = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: 16,
-  position: 'relative', // for absolute positioning of the results box in desktop
-  [theme.breakpoints.down('sm')]: {
-    display: 'none',
-  },
-}));
-
-const ActiveLink = styled(Typography)(({ theme }) => ({
-  borderBottom: `2px solid ${theme.palette.text.secondary}`,
-}));
 
 const ModeSwitch = styled(Switch)(({ theme }) => ({
   width: 54,
@@ -174,13 +155,7 @@ const ModeSwitch = styled(Switch)(({ theme }) => ({
 }));
 
 // Drawer component with nested view and right arrow for items with children.
-const DrawerComponent = ({
-  open,
-  setOpen,
-  mode,
-  setMode,
-  isAdmin,
-}: DrawerProps) => {
+const DrawerComponent = ({ open, setOpen, mode, setMode }: DrawerProps) => {
   const handleModeToggle = useCallback(() => {
     setMode((prev) => {
       const nextMode = prev === 'light' ? 'dark' : 'light';
@@ -233,7 +208,22 @@ const DrawerComponent = ({
   >(null);
   const [nestedTitle, setNestedTitle] = useState('');
 
-  const handleParentClick = (item: any) => {
+  const handleParentClick = (
+    item:
+      | {
+          name: string;
+          url: string;
+          children?: undefined;
+        }
+      | {
+          name: string;
+          children: {
+            name: string;
+            url: string;
+          }[];
+          url?: undefined;
+        },
+  ) => {
     if (item.children) {
       setNestedItems(item.children);
       setNestedTitle(item.name);
@@ -335,7 +325,6 @@ const DrawerComponent = ({
 // Navbar component with search area behavior.
 const Navbar = ({ mode, setMode }: NavbarProps) => {
   const { data: session, status: sessionStatus } = useSession();
-  const pathname = usePathname();
   const dispatch = useAppDispatch();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -350,14 +339,6 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  const toggleMode = useCallback(() => {
-    setMode((prev) => {
-      const nextMode = prev === 'light' ? 'dark' : 'light';
-      localStorage.setItem('mode', nextMode);
-      return nextMode;
-    });
-  }, [setMode]);
 
   // Search state (used for both desktop and mobile)
   const [searchQuery, setSearchQuery] = useState('');
@@ -418,7 +399,6 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
             setOpen={setDrawerOpen}
             mode={mode}
             setMode={setMode}
-            isAdmin={user?.isAdmin || false}
           />
           <Typography variant='h6'>Exclusive</Typography>
         </Stack>
@@ -498,9 +478,13 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
             </Badge>
           </Link>
           {user?.isAdmin && (
-            <IconButton component={Link} href='/admin' sx={{
-              p: 0
-            }}>
+            <IconButton
+              component={Link}
+              href='/admin'
+              sx={{
+                p: 0,
+              }}
+            >
               <SupervisorAccount />
             </IconButton>
           )}

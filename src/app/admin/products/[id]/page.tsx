@@ -32,6 +32,7 @@ import {
 import { FileWithPath, useDropzone } from 'react-dropzone';
 import { app } from '@/firebase';
 import {
+  deleteObject,
   getDownloadURL,
   getStorage,
   ref,
@@ -40,6 +41,8 @@ import {
 import SimpleSnackbar from '@/components/snackbar';
 import Image from 'next/image';
 import axios from 'axios';
+import { useParams, useRouter } from 'next/navigation';
+import { IProduct } from '@/models/Product.model';
 
 interface ImagePreviewProps {
   src: string;
@@ -48,9 +51,13 @@ interface ImagePreviewProps {
 }
 interface MainPicProps {
   setFile: (file: FileWithPath | null) => void;
+  preview: string;
+  setPreview: Dispatch<SetStateAction<string>>;
 }
 interface ThumbnailsProps {
   setFiles: Dispatch<SetStateAction<FileWithPath[]>>;
+  previews: string[];
+  setPreviews: Dispatch<SetStateAction<string[]>>;
 }
 
 // Styled image container with hover effect
@@ -98,9 +105,7 @@ const ImagePreview = ({
   );
 };
 
-const MainPic = ({ setFile }: MainPicProps) => {
-  const [preview, setPreview] = useState<string>();
-
+const MainPic = ({ setFile, preview, setPreview }: MainPicProps) => {
   const onDrop = (acceptedFiles: FileWithPath[]) => {
     const file = acceptedFiles[0];
     if (!file) return;
@@ -154,9 +159,7 @@ const MainPic = ({ setFile }: MainPicProps) => {
   );
 };
 
-const Thumbnails = ({ setFiles }: ThumbnailsProps) => {
-  const [previews, setPreviews] = useState<string[]>([]);
-
+const Thumbnails = ({ setFiles, previews, setPreviews }: ThumbnailsProps) => {
   const onDrop = (acceptedFiles: FileWithPath[]) => {
     // Filter files that are 5MB or less
     const validFiles = acceptedFiles.filter(
@@ -234,10 +237,12 @@ const Thumbnails = ({ setFiles }: ThumbnailsProps) => {
 };
 
 const NewProduct = () => {
+  const { id } = useParams();
   const [loading, setLoading] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [message, setMessage] = useState('');
+  const [product, setProduct] = useState<IProduct | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     brand: '',
@@ -252,9 +257,29 @@ const NewProduct = () => {
   });
   const [mainPic, setMainPic] = useState<FileWithPath | null>(null);
   const [thumbnails, setThumbnails] = useState<FileWithPath[]>([]);
+  const [mainPicPreview, setMainPicPreview] = useState<string>('');
+  const [thumbnailsPreviews, setThumbnailsPreviews] = useState<string[]>([]);
 
   const { brands } = useAppSelector((state) => state.brand);
+  const router = useRouter();
   const storage = getStorage(app);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const res = await axios.get(`/api/products/${id}`);
+        const prod = res.data;
+        setProduct(prod);
+        setFormData({ ...prod, brand: prod.brand._id });
+        setMainPicPreview(prod.mainPic);
+        setThumbnailsPreviews(prod.otherImages);
+      } catch (e) {
+        console.error(errorHandler(e));
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
 
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -264,6 +289,7 @@ const NewProduct = () => {
     },
     [],
   );
+
   const handleSelect = useCallback(
     (e: SelectChangeEvent) => {
       const { name, value } = e.target;
@@ -300,21 +326,27 @@ const NewProduct = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      if (!mainPic) {
-        setMessage('Main Picture is required');
-        setSnackbarOpen(true);
-        return;
-      }
-      // TODO: Implement your submission logic (e.g., upload images and send formData)
-      const mainPicURL = await uploadMainPic(mainPic);
-      const thumbnailsURLs = await uploadThumbnails(thumbnails);
+      const mainPicURL = mainPic ? await uploadMainPic(mainPic) : null;
+      const thumbnailsURLs = thumbnails
+        ? await uploadThumbnails(thumbnails)
+        : thumbnailsPreviews;
 
-      const res = await axios.post('/api/admin/products', {
+      thumbnailsPreviews.forEach((preview) => {
+        if (product?.otherImages.includes(preview)) {
+          thumbnailsURLs.push(preview);
+        } else {
+          const storageRef = ref(storage, preview);
+          deleteObject(storageRef);
+        }
+      });
+
+      const res = await axios.patch(`/api/admin/products/${product?._id}`, {
         ...formData,
-        mainPic: mainPicURL,
+        ...(mainPicURL && { mainPic: mainPicURL }),
         otherImages: thumbnailsURLs,
       });
-      // setSnackbarOpen()
+      setMessage('Changes saved');
+      setSnackbarOpen(true);
       console.log(res.data);
     } catch (error) {
       const errorMessage = errorHandler(error);
@@ -326,17 +358,49 @@ const NewProduct = () => {
     }
   };
 
+  const handleDelete = async () => {
+    setLoading(true);
+    if (!product) return;
+    try {
+      await axios.delete(`/api/admin/products/${product?._id}`);
+      product.otherImages.forEach((preview) => {
+        const storageRef = ref(storage, preview);
+        deleteObject(storageRef);
+      });
+      setMessage(`${product?.name} deleted`);
+      setSnackbarOpen(true);
+      router.push('/admin/products');
+    } catch (error) {
+      const errorMessage = errorHandler(error);
+      setMessage(errorMessage);
+      console.error(errorMessage);
+      setSnackbarOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if(!product) return null
+
   return (
     <Stack p={{ xs: 1, sm: 4 }} spacing={2}>
-      <Typography variant='h6'>Add a new Perfume</Typography>
+      <Typography variant='h6'>Modify Perfume</Typography>
       <Grid2 container spacing={2}>
         <Grid2 size={{ xs: 12, sm: 3 }} spacing={1}>
           <Typography variant='subtitle1'>Main Picture</Typography>
-          <MainPic setFile={setMainPic} />
+          <MainPic
+            setFile={setMainPic}
+            preview={mainPicPreview}
+            setPreview={setMainPicPreview}
+          />
         </Grid2>
         <Grid2 size={{ xs: 12, sm: 9 }} spacing={1}>
           <Typography variant='subtitle1'>Thumbnails</Typography>
-          <Thumbnails setFiles={setThumbnails} />
+          <Thumbnails
+            setFiles={setThumbnails}
+            previews={thumbnailsPreviews}
+            setPreviews={setThumbnailsPreviews}
+          />
         </Grid2>
       </Grid2>
       <Grid2 container component='form' spacing={2} onSubmit={handleSubmit}>
@@ -500,15 +564,23 @@ const NewProduct = () => {
             rows={6}
           />
         </Grid2>
-        <Grid2 size={{ xs: 12 }}>
+        <Grid2 size={{ xs: 12 }} display='flex' justifyContent='center'>
+          <Button
+            sx={{ flex: 1 }}
+            size='large'
+            disabled={loading}
+            onClick={() => handleDelete()}
+          >
+            Delete Perfume
+          </Button>
           <Button
             type='submit'
             variant='contained'
-            fullWidth
             size='large'
             disabled={loading}
+            sx={{ flex: 1 }}
           >
-            Add Perfume
+            Save Changes
           </Button>
         </Grid2>
       </Grid2>

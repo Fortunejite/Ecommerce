@@ -18,11 +18,10 @@ export async function GET(request: NextRequest) {
     if (!session)
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     const { user } = session;
-    const { isAdmin } = user;
 
     const skip = (page - 1) * limit;
     const query = {
-      ...(!isAdmin && { user: user._id }),
+      user: user._id,
       ...(status && { status }),
     };
 
