@@ -24,7 +24,8 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
-const PriceSection = ({ product }: { product: IProduct }) => {
+const PriceSection = ({ product }: { product: IProduct | null }) => {
+  if (!product) return;
   if (product.discount > 0) {
     const discountAmount =
       product.price - (product.discount / 100) * product.price;
@@ -162,9 +163,9 @@ const OrderDetails = () => {
           } & IOrder['cartItems'][0])[]
         ).map(({ product, quantity }) => (
           <Grid2
-            key={product._id.toString()}
+            key={product?._id.toString()}
             size={{ xs: 12, sm: 6 }}
-            onClick={() => router.push(`/products/${product._id}`)}
+            onClick={() => router.push(`/products/${product?._id}`)}
             sx={{
               cursor: 'pointer',
             }}
@@ -173,17 +174,21 @@ const OrderDetails = () => {
               <Grid2 container spacing={2}>
                 <Grid2 size={3} sx={{ position: 'relative' }}>
                   <Image
-                    src={product.mainPic}
-                    alt={product.name}
+                    src={product?.mainPic}
+                    alt={product?.name}
                     fill
                     objectFit='contain'
                     style={{ padding: '8px' }}
                   />
                 </Grid2>
                 <Grid2 size={9} p={1}>
-                  <Typography fontWeight={600}>{product.name}</Typography>
+                  <Typography fontWeight={600}>{product?.name}</Typography>
                   <Typography variant='body2'>
-                    Brand: {getBrandById({ brand: Brand }, product.brand.toString())?.name}
+                    Brand:{' '}
+                    {
+                      getBrandById({ brand: Brand }, product?.brand.toString())
+                        ?.name
+                    }
                   </Typography>
                   <Typography variant='body2' mt={1}>
                     QTY: <strong>{quantity}</strong>

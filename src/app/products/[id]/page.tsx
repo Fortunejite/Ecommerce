@@ -132,7 +132,7 @@ const ProductDetails = () => {
   );
   const cartItem = useAppSelector((state) =>
     state.cart.items.find(
-      (item) => (item.product as IProduct)._id === (product?._id as IProduct['_id'])
+      (item) => (item.product as IProduct)?._id === (product?._id as IProduct['_id'])
     )
   );
   const { status } = useAppSelector((state) => state.cart);

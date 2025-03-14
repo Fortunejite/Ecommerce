@@ -1,11 +1,13 @@
 'use client';
 
 import OrderStatus from '@/components/orderStatus';
+import { useAppSelector } from '@/hooks/redux.hook';
 import { calculateTotalItems, calculateTotalAmount } from '@/lib/cartUtils';
 import { formatDate } from '@/lib/formatDate';
 import { formatNumber } from '@/lib/formatNumber';
 import { IOrder } from '@/models/Order.model';
 import { IProduct } from '@/models/Product.model';
+import { getBrandById } from '@/redux/brandSlice';
 import {
   Breadcrumbs,
   Divider,
@@ -22,6 +24,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
 const PriceSection = ({ product }: { product: IProduct }) => {
+  if (!product) return
   if (product.discount > 0) {
     const discountAmount =
       product.price - (product.discount / 100) * product.price;
@@ -43,6 +46,7 @@ const OrderDetails = () => {
   const { id } = useParams();
   const [order, setOrder] = useState<IOrder | null>(null);
   const [loading, setLoading] = useState(true);
+  const Brand = useAppSelector((state) => state.brand);
 
   // Redirect unauthenticated users once the session status is determined
   useEffect(() => {
@@ -113,16 +117,16 @@ const OrderDetails = () => {
       <Grid2 container spacing={2}>
         {(
           order.cartItems as unknown as ({
-            product: IProduct;
+            product: IProduct | null;
           } & IOrder['cartItems'][0])[]
         ).map(({ product, quantity }) => (
-          <Grid2 key={product._id.toString()} size={{ xs: 12, sm: 6 }}>
+          <Grid2 key={product?._id.toString()} size={{ xs: 12, sm: 6 }}>
             <Paper>
               <Grid2 container spacing={2}>
                 <Grid2 size={3} sx={{ position: 'relative' }}>
                   <Image
-                    src={product.mainPic}
-                    alt={product.name}
+                    src={product?.mainPic}
+                    alt={product?.name}
                     fill
                     objectFit='contain'
                     style={{ padding: '8px' }}
@@ -130,10 +134,10 @@ const OrderDetails = () => {
                 </Grid2>
                 <Grid2 size={9} p={1}>
                   <OrderStatus status={order.status} />
-                  <Typography fontWeight={600}>{product.name}</Typography>
-                  {product.brand && (
+                  <Typography fontWeight={600}>{product?.name}</Typography>
+                  {product?.brand && (
                     <Typography variant='body2'>
-                      brand: <strong>{product.brand.toString()}</strong>
+                      Brand: {getBrandById({ brand: Brand }, product?.brand.toString())?.name}
                     </Typography>
                     // <Stack direction='row' gap={1} alignItems='center' mt={1}>
                     // </Stack>

@@ -4,7 +4,8 @@ import { IProduct } from '@/models/Product.model';
 
 export const calculateTotalAmount = (items: ICart['items'] | IOrder['cartItems']) =>
   items.reduce((acc, item) => {
-    return acc + (item.product as IProduct)?.price * item?.quantity;
+    if (item.product) return acc + (item.product as IProduct).price * item?.quantity;
+    return acc;
   }, 0);
 
 export const calculateTotalItems = (items: ICart['items'] | IOrder['cartItems']) =>

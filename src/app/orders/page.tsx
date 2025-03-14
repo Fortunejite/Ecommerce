@@ -36,18 +36,18 @@ const OrderElement = ({ order }: { order: IOrder }) => {
   const { trackingId, status } = order;
   // Type assertion for cartItems
   const cartItems = order.cartItems as unknown as ({
-    product: IProduct;
+    product: IProduct | null;
   } & IOrder['cartItems'][0])[];
 
   return (
     <>
       {cartItems.map(({ product, quantity }) => (
-        <Paper key={product._id.toString()} sx={{ mb: 2, p: 1 }}>
+        <Paper key={product?._id.toString()} sx={{ mb: 2, p: 1 }}>
           <Grid2 container spacing={2}>
             <Grid2 size={{ xs: 3, sm: 2 }} sx={{ position: 'relative' }}>
               <Image
-                src={product.mainPic}
-                alt={product.name}
+                src={product?.mainPic}
+                alt={product?.name}
                 fill
                 objectFit='contain'
                 style={{ padding: '4px' }}
@@ -63,12 +63,12 @@ const OrderElement = ({ order }: { order: IOrder }) => {
               }
               sx={{ cursor: isMobile ? 'pointer' : 'default' }}
             >
-              <Typography variant='subtitle1'>{product.name}</Typography>
+              <Typography variant='subtitle1'>{product?.name}</Typography>
               <Typography variant='body2'>Order {trackingId}</Typography>
               <OrderStatus status={status} />
               <Typography variant='body2'>
                 Brand:{' '}
-                {getBrandById({ brand: Brand }, product.brand.toString())?.name}
+                {getBrandById({ brand: Brand }, product?.brand.toString())?.name}
               </Typography>
               <Typography variant='body2' mt={1}>
                 QTY: <strong>{quantity}</strong>

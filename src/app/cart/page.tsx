@@ -86,6 +86,7 @@ const Cart = () => {
             <Divider sx={{ my: 1 }} />
             {items.map((item) => {
               const product = item.product as IProduct;
+              if (!product) return
               const discountAmount = product.discount
                 ? product.price - (product.discount / 100) * product.price
                 : product.price;
