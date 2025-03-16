@@ -1,6 +1,7 @@
 'use client';
 
 import Product from '@/components/product';
+import ProductSkeleton from '@/components/productSkeleton';
 import { errorHandler } from '@/lib/errorHandler';
 import { IProduct } from '@/models/Product.model';
 import { Box, Grid2, Pagination, Stack, Typography } from '@mui/material';
@@ -38,8 +39,19 @@ const Search = () => {
   }, [fetchProducts]);
 
   const changePage = (e: ChangeEvent<unknown>, value: number) => {
-      setCurrentPage(value);
-    };
+    setCurrentPage(value);
+  };
+
+  if (loading)
+    return (
+      <Grid2 container spacing={2} my={2}>
+        {Array.from({ length: LIMIT }).map((_, i) => (
+          <Grid2 key={i} size={{ xs: 6, sm: 3 }}>
+            <ProductSkeleton />
+          </Grid2>
+        ))}
+      </Grid2>
+    );
 
   return (
     <Stack gap={2} p={{ xs: 1, sm: 4 }}>
