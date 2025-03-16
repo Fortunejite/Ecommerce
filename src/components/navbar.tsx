@@ -17,7 +17,9 @@ import {
   Avatar,
   Badge,
   Box,
+  Divider,
   FormControlLabel,
+  Grid2,
   IconButton,
   InputAdornment,
   List,
@@ -55,6 +57,11 @@ import { fetchFavourite } from '@/redux/favouriteSlice';
 import { fetchCart } from '@/redux/cartSlice';
 import { fetchBrands } from '@/redux/brandSlice';
 import { FraganceFamily } from '@/lib/perfumeDetails';
+import { errorHandler } from '@/lib/errorHandler';
+import axios from 'axios';
+import { IProduct } from '@/models/Product.model';
+import Image from 'next/image';
+import { formatNumber } from '@/lib/formatNumber';
 
 interface NavbarProps {
   mode: 'light' | 'dark';
@@ -153,6 +160,28 @@ const ModeSwitch = styled(Switch)(({ theme }) => ({
     }),
   },
 }));
+
+const PriceSection = ({ product }: { product: IProduct }) => {
+  if (product.discount > 0) {
+    const discountAmount =
+      product.price - (product.discount / 100) * product.price;
+    return (
+      <Stack direction='row' spacing={1}>
+        <Typography variant='subtitle1' component='p' color='primary'>
+          ₦{formatNumber(discountAmount.toFixed(0))}
+        </Typography>
+        <Typography variant='subtitle1' sx={{ textDecoration: 'line-through' }}>
+          ₦{formatNumber(product.price.toFixed(0))}
+        </Typography>
+      </Stack>
+    );
+  }
+  return (
+    <Typography variant='subtitle1' component='p' color='primary'>
+      ₦{formatNumber(product.price.toFixed(0))}
+    </Typography>
+  );
+};
 
 // Drawer component with nested view and right arrow for items with children.
 const DrawerComponent = ({ open, setOpen, mode, setMode }: DrawerProps) => {
@@ -339,23 +368,32 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const router = useRouter();
 
   // Search state (used for both desktop and mobile)
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<string[]>([]);
+  const [searchResults, setSearchResults] = useState<IProduct[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   // For mobile: when the search icon is clicked, show a full-screen search overlay.
   const [mobileSearchActive, setMobileSearchActive] = useState(false);
 
-  // Dummy search results logic: filter a dummy list by searchQuery.
-  const dummyData = ['Red Roses', 'Blue Ocean', 'Green Forest', 'Yellow Sun'];
+  // Dummy search results logic: filter a dummy list by searchQuery.\
+
   useEffect(() => {
+    const autoComplete = async () => {
+      try {
+        const { data } = await axios.get(
+          `/api/autocomplete?q=${searchQuery.trim()}`,
+        );
+        setSearchResults(data);
+        setShowSearchResults(true);
+      } catch (e) {
+        console.error(errorHandler(e));
+      }
+    };
+
     if (searchQuery.trim().length > 0) {
-      const results = dummyData.filter((item) =>
-        item.toLowerCase().includes(searchQuery.toLowerCase()),
-      );
-      setSearchResults(results);
-      setShowSearchResults(true);
+      autoComplete();
     } else {
       setShowSearchResults(false);
       setSearchResults([]);
@@ -447,10 +485,37 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
                   p: 1,
                 }}
               >
-                {searchResults.map((result, idx) => (
-                  <Typography key={idx} variant='body2' sx={{ py: 1 }}>
-                    {result}
-                  </Typography>
+                {searchResults.map((result) => (
+                  <>
+                    <Grid2
+                      container
+                      key={result._id.toString()}
+                      spacing={1}
+                      my={1}
+                      sx={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        setShowSearchResults(false);
+                        router.push(`/products/${result._id}`);
+                      }}
+                    >
+                      <Grid2 size={3} sx={{ position: 'relative' }}>
+                        <Image
+                          src={result.mainPic}
+                          alt={result.name}
+                          fill
+                          objectFit='contain'
+                          style={{ padding: '8px' }}
+                        />
+                      </Grid2>
+                      <Grid2 size={9}>
+                        <Typography variant='subtitle1'>
+                          {result.name}
+                        </Typography>
+                        <PriceSection product={result} />
+                      </Grid2>
+                    </Grid2>
+                    <Divider />
+                  </>
                 ))}
               </Box>
             )}
@@ -563,10 +628,35 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
           </Stack>
           {searchQuery && searchResults.length > 0 && (
             <Box>
-              {searchResults.map((result, idx) => (
-                <Typography key={idx} variant='body2' sx={{ py: 1 }}>
-                  {result}
-                </Typography>
+              {searchResults.map((result) => (
+                <>
+                  <Grid2
+                    container
+                    key={result._id.toString()}
+                    spacing={1}
+                    my={1}
+                    sx={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      setShowSearchResults(false);
+                      router.push(`/products/${result._id}`);
+                    }}
+                  >
+                    <Grid2 size={3} sx={{ position: 'relative' }}>
+                      <Image
+                        src={result.mainPic}
+                        alt={result.name}
+                        fill
+                        objectFit='contain'
+                        style={{ padding: '8px' }}
+                      />
+                    </Grid2>
+                    <Grid2 size={9}>
+                      <Typography>{result.name}</Typography>
+                      <PriceSection product={result} />
+                    </Grid2>
+                  </Grid2>
+                  <Divider />
+                </>
               ))}
             </Box>
           )}
