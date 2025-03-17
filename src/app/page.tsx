@@ -40,7 +40,7 @@ export default function Home() {
 
   return (
     <Stack p={{ xs: 1, sm: 4 }} spacing={4}>
-      {topSelling.length && (
+      {topSelling.length > 0 && (
         <Section title='Top selling products' subtitle='Top Selling'>
             {topSelling.map((product) => (
               <Grid2 key={product._id.toString()} size={{ xs: 6, sm: 3 }}>
@@ -49,7 +49,7 @@ export default function Home() {
             ))}
         </Section>
       )}
-      {topDeals.length && (
+      {topDeals.length > 0 && (
         <Section title='Top discounts' subtitle='Top Deals'>
             {topDeals.map((product) => (
               <Grid2 key={product._id.toString()} size={{ xs: 6, sm: 3 }}>

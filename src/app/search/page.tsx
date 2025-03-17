@@ -44,13 +44,15 @@ const Search = () => {
 
   if (loading)
     return (
-      <Grid2 container spacing={2} my={2}>
-        {Array.from({ length: LIMIT }).map((_, i) => (
-          <Grid2 key={i} size={{ xs: 6, sm: 3 }}>
-            <ProductSkeleton />
-          </Grid2>
-        ))}
-      </Grid2>
+      <Stack gap={2} p={{ xs: 1, sm: 4 }}>
+        <Grid2 container spacing={2} my={2}>
+          {Array.from({ length: LIMIT }).map((_, i) => (
+            <Grid2 key={i} size={{ xs: 6, sm: 3 }}>
+              <ProductSkeleton />
+            </Grid2>
+          ))}
+        </Grid2>
+      </Stack>
     );
 
   return (

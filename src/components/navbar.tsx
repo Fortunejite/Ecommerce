@@ -17,6 +17,7 @@ import {
   Avatar,
   Badge,
   Box,
+  Button,
   Divider,
   FormControlLabel,
   Grid2,
@@ -62,6 +63,7 @@ import axios from 'axios';
 import { IProduct } from '@/models/Product.model';
 import Image from 'next/image';
 import { formatNumber } from '@/lib/formatNumber';
+import businessInfo from '@/businessInfo.json';
 
 interface NavbarProps {
   mode: 'light' | 'dark';
@@ -424,10 +426,10 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
   return (
     <AppBar position='sticky' elevation={1}>
       <StyledToolbar>
-        <Stack direction='row' gap={1}>
+        <Stack direction='row' gap={1} alignItems='center'>
           <IconButton
             onClick={() => setDrawerOpen(true)}
-            sx={{ alignItems: 'center', p: 0 }}
+            sx={{ alignItems: 'center' }}
             aria-label='Open navigation menu'
           >
             <MenuIcon />
@@ -438,11 +440,18 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
             mode={mode}
             setMode={setMode}
           />
-          <Typography variant='h6'>Exclusive</Typography>
+          <Typography variant='h6' component={Link} href='/'>
+            {businessInfo.name}
+          </Typography>
         </Stack>
         {/* Desktop Search Area */}
         {!isMobile && (
           <Box
+            component='form'
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (searchQuery.length) router.push(`/search?q=${searchQuery}`);
+            }}
             sx={{
               position: 'relative',
               backgroundColor: 'background.paper',
@@ -560,6 +569,11 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
               alt='User avatar'
             />
           )}
+          {sessionStatus === 'unauthenticated' && (
+            <Button variant='contained' component={Link} href='/login'>
+              Login
+            </Button>
+          )}
           <Menu
             anchorEl={anchorEl}
             open={menuOpen}
@@ -606,7 +620,17 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
             overflowY: 'auto',
           }}
         >
-          <Stack direction='row' alignItems='center' spacing={1} mb={2}>
+          <Stack
+            direction='row'
+            alignItems='center'
+            spacing={1}
+            mb={2}
+            component='form'
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (searchQuery.length) router.push(`/search?q=${searchQuery}`);
+            }}
+          >
             <IconButton onClick={() => setMobileSearchActive(false)}>
               <ArrowBackIcon />
             </IconButton>

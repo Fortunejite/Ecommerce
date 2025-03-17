@@ -13,31 +13,30 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const regex = new RegExp('^' + userQuery, 'i');
-
-    const results = await Product.find({ name: { $regex: regex } }).limit(5);
-
-    // const results = await Product.aggregate([
-    //   {
-    //     $search: {
-    //       autocomplete: {
-    //         query: userQuery,
-    //         path: 'name',
-    //         fuzzy: {
-    //           maxEdits: 1,
-    //           prefixLength: 2,
-    //         },
-    //       },
-    //     },
-    //   },
-    //   { $limit: 10 },
-    //   {
-    //     $project: {
-    //       name: 1,
-    //       score: { $meta: 'searchScore' },
-    //     },
-    //   },
-    // ]);
+    const results = await Product.aggregate([
+      {
+        $search: {
+          autocomplete: {
+            query: userQuery,
+            path: 'name',
+            fuzzy: {
+              maxEdits: 1,
+              prefixLength: 2,
+            },
+          },
+        },
+      },
+      { $limit: 5 },
+      {
+        $project: {
+          name: 1,
+          mainPic: 1,
+          discount: 1,
+          price: 1,
+          score: { $meta: 'searchScore' },
+        },
+      },
+    ]);
 
     return NextResponse.json(results);
   } catch (e) {

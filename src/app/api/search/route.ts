@@ -17,14 +17,15 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const regex = new RegExp('^' + userQuery, 'i');
-
     const [results, totalCount] = await Promise.all([
-      Product.find({ name: { $regex: regex } })
-        .limit(limit)
+      Product.find(
+        { $text: { $search: userQuery } },
+        { score: { $meta: 'textScore' } },
+      )
         .skip(skip)
+        .limit(limit)
         .populate('brand'),
-      Product.countDocuments({ name: { $regex: regex } }),
+      Product.countDocuments({ $text: { $search: userQuery } }),
     ]);
     return NextResponse.json({ results, totalCount });
   } catch (e) {
