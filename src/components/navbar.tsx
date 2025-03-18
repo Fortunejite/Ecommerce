@@ -448,7 +448,11 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
             mode={mode}
             setMode={setMode}
           />
-          <Typography variant='h6' component={Link} href='/'>
+          <Typography variant='h6' component={Link} href='/' sx={{
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  }}>
             {businessInfo.name}
           </Typography>
         </Stack>
