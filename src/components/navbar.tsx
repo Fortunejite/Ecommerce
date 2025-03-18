@@ -43,7 +43,7 @@ import {
 } from '@mui/material';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   useCallback,
   useEffect,
@@ -99,6 +99,7 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   [theme.breakpoints.down('sm')]: {
     pr: 1,
   },
+  gap: 1,
 }));
 
 const Actions = styled(Box)({
@@ -371,6 +372,7 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const router = useRouter();
+  const pathname = usePathname();
 
   // Search state (used for both desktop and mobile)
   const [searchQuery, setSearchQuery] = useState('');
@@ -379,7 +381,10 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
   // For mobile: when the search icon is clicked, show a full-screen search overlay.
   const [mobileSearchActive, setMobileSearchActive] = useState(false);
 
-  // Dummy search results logic: filter a dummy list by searchQuery.\
+  useEffect(() => {
+    setMobileSearchActive(false)
+    setShowSearchResults(false)
+  }, [pathname])
 
   useEffect(() => {
     // Set a timer for debouncing the API call
@@ -434,7 +439,7 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
   return (
     <AppBar position='sticky' elevation={1}>
       <StyledToolbar>
-        <Stack direction='row' gap={1} alignItems='center'>
+        <Stack direction='row' gap={0.5} alignItems='center'>
           <IconButton
             onClick={() => setDrawerOpen(true)}
             sx={{ alignItems: 'center' }}
