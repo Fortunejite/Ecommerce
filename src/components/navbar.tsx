@@ -382,25 +382,33 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
   // Dummy search results logic: filter a dummy list by searchQuery.\
 
   useEffect(() => {
-    const autoComplete = async () => {
-      try {
-        const { data } = await axios.get(
-          `/api/autocomplete?q=${searchQuery.trim()}`,
-        );
-        setSearchResults(data);
-        setShowSearchResults(true);
-      } catch (e) {
-        console.error(errorHandler(e));
+    // Set a timer for debouncing the API call
+    const timer = setTimeout(() => {
+      if (searchQuery.trim().length > 0) {
+        // Make the API call if there is a valid search query
+        const autoComplete = async () => {
+          try {
+            const { data } = await axios.get(
+              `/api/autocomplete?q=${searchQuery.trim()}`
+            );
+            setSearchResults(data);
+            setShowSearchResults(true);
+          } catch (e) {
+            console.error(errorHandler(e));
+          }
+        };
+        autoComplete();
+      } else {
+        // If the search query is empty, clear the results
+        setShowSearchResults(false);
+        setSearchResults([]);
       }
-    };
-
-    if (searchQuery.trim().length > 0) {
-      autoComplete();
-    } else {
-      setShowSearchResults(false);
-      setSearchResults([]);
-    }
+    }, 300); // Debounce delay in milliseconds
+  
+    // Clear the timeout if searchQuery changes before 300ms
+    return () => clearTimeout(timer);
   }, [searchQuery]);
+  
 
   useEffect(() => {
     if (sessionStatus !== 'unauthenticated' && favStatus === 'idle') {
