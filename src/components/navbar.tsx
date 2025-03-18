@@ -99,7 +99,6 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   [theme.breakpoints.down('sm')]: {
     pr: 1,
   },
-  gap: 1,
 }));
 
 const Actions = styled(Box)({
@@ -382,9 +381,9 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
   const [mobileSearchActive, setMobileSearchActive] = useState(false);
 
   useEffect(() => {
-    setMobileSearchActive(false)
-    setShowSearchResults(false)
-  }, [pathname])
+    setMobileSearchActive(false);
+    setShowSearchResults(false);
+  }, [pathname]);
 
   useEffect(() => {
     // Set a timer for debouncing the API call
@@ -394,7 +393,7 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
         const autoComplete = async () => {
           try {
             const { data } = await axios.get(
-              `/api/autocomplete?q=${searchQuery.trim()}`
+              `/api/autocomplete?q=${searchQuery.trim()}`,
             );
             setSearchResults(data);
             setShowSearchResults(true);
@@ -409,11 +408,10 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
         setSearchResults([]);
       }
     }, 300); // Debounce delay in milliseconds
-  
+
     // Clear the timeout if searchQuery changes before 300ms
     return () => clearTimeout(timer);
   }, [searchQuery]);
-  
 
   useEffect(() => {
     if (sessionStatus !== 'unauthenticated' && favStatus === 'idle') {
@@ -453,11 +451,17 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
             mode={mode}
             setMode={setMode}
           />
-          <Typography variant='h6' component={Link} href='/' sx={{
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  }}>
+          <Typography
+            variant='h6'
+            component={Link}
+            href='/'
+            sx={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              flexGrow: 1,
+            }}
+          >
             {businessInfo.name}
           </Typography>
         </Stack>
