@@ -14,7 +14,7 @@ const reloadWebsite = () => {
     )
     .catch((e) => {
       console.error(
-        `Error loading at ${new Date.toISOString()}:`,
+        `Error loading at ${new Date().toISOString()}:`,
         e.message,
       );
     });
