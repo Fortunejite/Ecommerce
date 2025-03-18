@@ -93,6 +93,7 @@ const parseStringToParams = ({
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: 'flex',
+  overflow: 'hidden',
   justifyContent: 'space-between',
   backgroundColor: theme.palette.background.default,
   color: theme.palette.text.primary,
@@ -101,11 +102,11 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   },
 }));
 
-const Actions = styled(Box)({
+const Actions = styled(Box)(({theme}) => ({
   display: 'flex',
   alignItems: 'center',
-  gap: 16,
-});
+  gap: theme.spacing(2), 
+}));
 
 const ModeSwitch = styled(Switch)(({ theme }) => ({
   width: 54,
@@ -459,7 +460,7 @@ const Navbar = ({ mode, setMode }: NavbarProps) => {
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-              flexGrow: 1,
+              maxWidth: {xs: '100px', sm: '100%'},
             }}
           >
             {businessInfo.name}
