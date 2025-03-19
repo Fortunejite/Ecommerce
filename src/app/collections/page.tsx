@@ -8,7 +8,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { ChangeEvent, useCallback, useEffect, useState, useMemo } from 'react';
+import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import FilterDrawer from './filterDrawer';
 import { IProduct } from '@/models/Product.model';
 import Product from '@/components/product';
@@ -20,10 +20,17 @@ import { useSearchParams } from 'next/navigation';
 
 export default function Products() {
   const [filterOpen, setFilterOpen] = useState(false);
-  const params = useSearchParams()
-  const InitialParams = new URLSearchParams();
-  InitialParams.append(params.get('field') || '', params.get('value') || '')
-  const [queryString, setQueryString] = useState(InitialParams.toString());
+  const params = useSearchParams();
+  
+  // Build initial query string conditionally
+  const field = params.get('field');
+  const value = params.get('value');
+  const initialParams = new URLSearchParams();
+  if (field && value) {
+    initialParams.append(field, value);
+  }
+  
+  const [queryString, setQueryString] = useState(initialParams.toString());
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<IProduct[]>([]);
   const [count, setCount] = useState(0);
@@ -31,8 +38,7 @@ export default function Products() {
 
   const LIMIT = 8;
   const pageCount = Math.ceil(count / LIMIT) || 1;
-
-  const title = params.get('title') || 'All Fragrance & Perfume'
+  const title = params.get('title') || 'All Fragrance & Perfume';
 
   // Reset current page whenever queryString changes
   useEffect(() => {
@@ -40,7 +46,7 @@ export default function Products() {
   }, [queryString]);
 
   // Compute filtersCount based solely on queryString changes
-  const filtersCount = useMemo(() => {
+  const filtersCount = (() => {
     const params = new URLSearchParams(queryString);
     let count = 0;
     if (params.get('minPrice')) count++;
@@ -54,7 +60,7 @@ export default function Products() {
       },
     );
     return count;
-  }, [queryString]);
+  })();
 
   // Fetch products based on current query and page
   const fetchProducts = useCallback(async () => {
@@ -90,12 +96,11 @@ export default function Products() {
         }}
       >
         <Box>
-        <Typography variant='h6'>{title}</Typography>
-        <Typography variant='body2'>{count} products</Typography>
-
+          <Typography variant="h6">{title}</Typography>
+          <Typography variant="body2">{count} products</Typography>
         </Box>
         <Button
-          variant='contained'
+          variant="contained"
           endIcon={<Tune />}
           onClick={() => setFilterOpen(true)}
         >
@@ -130,7 +135,7 @@ export default function Products() {
           ))}
         </Grid2>
       ) : (
-        <Typography variant='h6' align='center'>
+        <Typography variant="h6" align="center">
           No results found
         </Typography>
       )}
@@ -141,7 +146,7 @@ export default function Products() {
         <Pagination
           count={pageCount}
           page={currentPage}
-          shape='rounded'
+          shape="rounded"
           onChange={changePage}
         />
       </Box>
