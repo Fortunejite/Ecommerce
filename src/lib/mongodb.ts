@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import mongoose, { Mongoose } from "mongoose";
+import mongoose, { Mongoose } from 'mongoose';
 
 const url = process.env.MONGODB_URI;
 
 if (!url) {
-  throw new Error("Please define the MONGODB_URI environment variable");
+  throw new Error('Please define the MONGODB_URI environment variable');
 }
 
 interface Cached {
@@ -24,17 +24,15 @@ export default async function dbConnect(): Promise<Mongoose> {
   if (!cached.promise) {
     cached.promise = mongoose
       .connect(url as string, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  connectTimeoutMS: 30000  // Increase timeout to 30 seconds
-}) // No need to pass options like `useNewUrlParser`
+        connectTimeoutMS: 30000,
+      }) // No need to pass options like `useNewUrlParser`
       .then((mongoose) => {
-        console.log("MongoDB connected.");
-mongoose.set('debug', true);
+        console.log('MongoDB connected.');
+        mongoose.set('debug', true);
         return mongoose;
       })
       .catch((error) => {
-        console.error("MongoDB connection error:", error);
+        console.error('MongoDB connection error:', error);
         throw error;
       });
   }
