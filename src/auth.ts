@@ -6,6 +6,7 @@ import type { NextAuthConfig, User } from 'next-auth';
 import { compare } from 'bcrypt';
 import { object, string } from 'zod';
 import UserModel from './models/User.model';
+import dbConnect from './lib/mongodb';
 
 const userObject = object({
   email: string().email('Invalid email format').toLowerCase(),
@@ -22,6 +23,8 @@ const option: NextAuthConfig = {
     Credentials({
       credentials: {},
       authorize: async (credentials) => {
+            await dbConnect();
+        
         const { email, password } = userObject.parse(credentials);
         const user = await UserModel.findOne({ email });
         if (!user) {
@@ -42,6 +45,8 @@ const option: NextAuthConfig = {
   ],
   callbacks: {
     async jwt({ token, user, account }) {
+          await dbConnect();
+      
       if (account?.provider === 'google' || account?.provider === 'facebook') {
         const { email, image, name } = user;
         if (email) {

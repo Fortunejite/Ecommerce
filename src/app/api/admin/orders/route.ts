@@ -1,8 +1,11 @@
 import { auth } from '@/auth';
+import dbConnect from '@/lib/mongodb';
 import Order from '@/models/Order.model';
 import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   try {
+    await dbConnect();
+
     // pagination
     const page = Number(request.nextUrl.searchParams.get('page')) || 1;
     const limit = Number(request.nextUrl.searchParams.get('limit')) || 10;

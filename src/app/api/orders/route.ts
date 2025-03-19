@@ -1,12 +1,16 @@
 import { auth } from '@/auth';
 import { calculateTotalAmount } from '@/lib/cartUtils';
 import { handleMongooseError } from '@/lib/errorHandler';
+import dbConnect from '@/lib/mongodb';
 import Cart, { ICart } from '@/models/Cart.model';
 import Order from '@/models/Order.model';
 import { IProduct } from '@/models/Product.model';
 import { NextRequest, NextResponse } from 'next/server';
+
 export async function GET(request: NextRequest) {
   try {
+    await dbConnect();
+
     // pagination
     const page = Number(request.nextUrl.searchParams.get('page')) || 1;
     const limit = Number(request.nextUrl.searchParams.get('limit')) || 10;
@@ -42,6 +46,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  await dbConnect();
+
   const session = await auth();
   if (!session)
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });

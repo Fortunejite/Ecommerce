@@ -1,9 +1,12 @@
 import { auth } from '@/auth';
+import dbConnect from '@/lib/mongodb';
 import User from '@/models/User.model';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
   try {
+    await dbConnect();
+
     const session = await auth();
     if (!session)
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -20,6 +23,8 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   try {
+    await dbConnect();
+
     const session = await auth();
     if (!session)
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });

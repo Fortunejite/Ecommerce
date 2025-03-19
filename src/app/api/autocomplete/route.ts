@@ -1,7 +1,10 @@
+import dbConnect from '@/lib/mongodb';
 import Product from '@/models/Product.model';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
+  await dbConnect();
+
   const { searchParams } = request.nextUrl;
   const userQuery = searchParams.get('q');
 

@@ -1,15 +1,20 @@
 import { auth } from '@/auth';
+import dbConnect from '@/lib/mongodb';
 import Cart from '@/models/Cart.model';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
   try {
+    await dbConnect();
+
     const session = await auth();
     if (!session)
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 
     const { user } = session;
-    const { items } = await Cart.findOne({ user: user._id }).populate('items.product');
+    const { items } = await Cart.findOne({ user: user._id }).populate(
+      'items.product',
+    );
     return NextResponse.json(items);
   } catch (e) {
     console.log(e);
@@ -19,6 +24,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    await dbConnect();
+
     const session = await auth();
     if (!session)
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });

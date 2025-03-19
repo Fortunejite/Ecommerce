@@ -1,4 +1,5 @@
 import { errorHandler } from '@/lib/errorHandler';
+import dbConnect from '@/lib/mongodb';
 import Cart from '@/models/Cart.model';
 import User from '@/models/User.model';
 import { NextResponse } from 'next/server';
@@ -17,6 +18,8 @@ const userSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    await dbConnect();
+
     const body = await request.json();
     const credentials = userSchema.parse(body);
 

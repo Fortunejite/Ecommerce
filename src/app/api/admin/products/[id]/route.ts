@@ -1,4 +1,5 @@
 import { auth } from '@/auth';
+import dbConnect from '@/lib/mongodb';
 import Product from '@/models/Product.model';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -7,6 +8,8 @@ export async function PATCH(
   { params }: { params: tParams },
 ) {
   try {
+    await dbConnect();
+
     const { id } = await params;
     if (!id) {
       return NextResponse.json(
@@ -48,6 +51,8 @@ export async function DELETE(
   { params }: { params: tParams },
 ) {
   try {
+    await dbConnect();
+
     const { id } = await params;
     if (!id) {
       return NextResponse.json(

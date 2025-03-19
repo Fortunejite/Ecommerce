@@ -1,9 +1,12 @@
 import { auth } from '@/auth';
 import { handleMongooseError } from '@/lib/errorHandler';
+import dbConnect from '@/lib/mongodb';
 import Product from '@/models/Product.model';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  await dbConnect();
+
   const session = await auth();
   if (!session)
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });

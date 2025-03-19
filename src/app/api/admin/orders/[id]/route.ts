@@ -1,4 +1,5 @@
 import { auth } from '@/auth';
+import dbConnect from '@/lib/mongodb';
 import Order from '@/models/Order.model';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -7,6 +8,8 @@ export async function PATCH(
   { params }: { params: tParams },
 ) {
   try {
+    await dbConnect();
+
     const { id } = await params;
     const session = await auth();
 

@@ -1,9 +1,12 @@
+import dbConnect from '@/lib/mongodb';
 import Product from '@/models/Product.model';
 import { SortOrder } from 'mongoose';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
+    await dbConnect();
+
     const { searchParams } = request.nextUrl;
 
     // Pagination
@@ -68,4 +71,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({}, { status: 500 });
   }
 }
-

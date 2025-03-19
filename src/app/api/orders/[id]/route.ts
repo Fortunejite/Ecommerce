@@ -1,3 +1,4 @@
+import dbConnect from '@/lib/mongodb';
 import Order from '@/models/Order.model';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -6,6 +7,8 @@ export async function GET(
   { params }: { params: tParams },
 ) {
   try {
+    await dbConnect();
+
     const { id } = await params;
     if (!id) {
       return NextResponse.json(
@@ -15,8 +18,8 @@ export async function GET(
     }
 
     const order = await Order.findOne({ trackingId: id })
-    .populate('user')
-    .populate('cartItems.product');
+      .populate('user')
+      .populate('cartItems.product');
     if (!order) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });
     }

@@ -1,9 +1,12 @@
 import { auth } from '@/auth';
+import dbConnect from '@/lib/mongodb';
 import User from '@/models/User.model';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
   try {
+    await dbConnect();
+
     const session = await auth();
     if (!session)
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -19,6 +22,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    await dbConnect();
+
     const session = await auth();
     if (!session)
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -32,7 +37,7 @@ export async function POST(request: NextRequest) {
         $push: { favourite: productId },
       },
       { new: true },
-    ).populate('favourite');;
+    ).populate('favourite');
     return NextResponse.json(favourite);
   } catch (e) {
     console.log(e);
