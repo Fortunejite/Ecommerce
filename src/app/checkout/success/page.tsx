@@ -4,7 +4,7 @@ import { CheckCircleOutline } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import React from 'react';
+import React, { Suspense } from 'react';
 
 const SuccessText = () => {
   const searchParams = useSearchParams();
@@ -35,7 +35,10 @@ const Success = () => {
       px={2}
     >
       <CheckCircleOutline fontSize="large" color="success" />
-      <SuccessText />
+      {/* Wrap SuccessText in Suspense */}
+      <Suspense fallback={<Typography>Loading...</Typography>}>
+        <SuccessText />
+      </Suspense>
     </Box>
   );
 };
