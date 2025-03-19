@@ -23,9 +23,14 @@ export default async function dbConnect(): Promise<Mongoose> {
 
   if (!cached.promise) {
     cached.promise = mongoose
-      .connect(url as string) // No need to pass options like `useNewUrlParser`
+      .connect(url as string, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  connectTimeoutMS: 30000  // Increase timeout to 30 seconds
+}) // No need to pass options like `useNewUrlParser`
       .then((mongoose) => {
         console.log("MongoDB connected.");
+mongoose.set('debug', true);
         return mongoose;
       })
       .catch((error) => {
