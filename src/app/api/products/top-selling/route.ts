@@ -2,6 +2,8 @@ import dbConnect from '@/lib/mongodb';
 import Product from '@/models/Product.model';
 import { NextRequest, NextResponse } from 'next/server';
 
+import '@/models/Brand.model'
+
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();

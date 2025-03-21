@@ -7,6 +7,9 @@ import Order from '@/models/Order.model';
 import { IProduct } from '@/models/Product.model';
 import { NextRequest, NextResponse } from 'next/server';
 
+import '@/models/Product.model'
+import '@/models/User.model'
+
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();

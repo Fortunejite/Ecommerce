@@ -3,6 +3,9 @@ import dbConnect from '@/lib/mongodb';
 import Order from '@/models/Order.model';
 import { NextRequest, NextResponse } from 'next/server';
 
+import '@/models/Product.model'
+import '@/models/User.model'
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: tParams },

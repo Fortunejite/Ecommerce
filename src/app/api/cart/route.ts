@@ -3,6 +3,8 @@ import dbConnect from '@/lib/mongodb';
 import Cart from '@/models/Cart.model';
 import { NextRequest, NextResponse } from 'next/server';
 
+import '@/models/Product.model'
+
 export async function GET() {
   try {
     await dbConnect();

@@ -3,6 +3,8 @@ import dbConnect from '@/lib/mongodb';
 import User from '@/models/User.model';
 import { NextRequest, NextResponse } from 'next/server';
 
+import '@/models/Product.model'
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: tParams },
